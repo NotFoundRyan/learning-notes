@@ -8,15 +8,15 @@ const shouldShow = ref(false)
 
 const loadGiscus = () => {
   if (!giscusContainer.value) return
-  
+
   giscusContainer.value.innerHTML = ''
-  
+
   const script = document.createElement('script')
   script.src = 'https://giscus.app/client.js'
-  script.setAttribute('data-repo', 'your-username/your-repo')
-  script.setAttribute('data-repo-id', 'your-repo-id')
+  script.setAttribute('data-repo', 'NotFoundRyan/learning-notes')
+  script.setAttribute('data-repo-id', 'R_kgDORurUAQ')
   script.setAttribute('data-category', 'Announcements')
-  script.setAttribute('data-category-id', 'your-category-id')
+  script.setAttribute('data-category-id', 'DIC_kwDORurUAc4C5Gvb')
   script.setAttribute('data-mapping', 'pathname')
   script.setAttribute('data-strict', '0')
   script.setAttribute('data-reactions-enabled', '1')
@@ -26,7 +26,7 @@ const loadGiscus = () => {
   script.setAttribute('data-lang', 'zh-CN')
   script.setAttribute('crossorigin', 'anonymous')
   script.async = true
-  
+
   giscusContainer.value.appendChild(script)
 }
 
