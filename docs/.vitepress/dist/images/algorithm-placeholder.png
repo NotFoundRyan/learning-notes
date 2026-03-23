@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
-  <rect fill="#f5f5f5" width="800" height="400"/>
-  <rect fill="#e5e5e5" x="300" y="150" width="200" height="100" rx="12"/>
-  <circle fill="#d4d4d4" cx="400" cy="120" r="40"/>
-  <text x="400" y="300" font-family="system-ui, sans-serif" font-size="18" fill="#737373" text-anchor="middle">算法图解占位符</text>
-</svg>
