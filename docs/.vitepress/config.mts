@@ -4,6 +4,7 @@ export default defineConfig({
   title: "学习笔记",
   description: "个人学习笔记网站",
   lang: 'zh-CN',
+  base: '/learning-notes/',
 
   head: [
     ['link', { rel: 'icon', href: '/logo.svg' }]
