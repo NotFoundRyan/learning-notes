@@ -63,7 +63,7 @@ greet("World")
 
 ## 图片
 
-![示例图片](/images/placeholder.png)
+![示例图片](/images/placeholder.svg)
 
 ## 链接
 

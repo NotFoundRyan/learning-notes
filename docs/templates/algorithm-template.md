@@ -83,7 +83,7 @@ public class Solution {
 
 ## 图解
 
-![算法图解](/images/algorithm-placeholder.png)
+![算法图解](/images/algorithm-placeholder.svg)
 
 ## 相关题目
 

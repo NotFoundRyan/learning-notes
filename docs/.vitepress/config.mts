@@ -112,5 +112,11 @@ export default defineConfig({
     math: true
   },
 
-  lastUpdated: true
+  lastUpdated: true,
+
+  ignoreDeadLinks: [
+    '/templates/algorithm-template',
+    '/templates/frontend-template',
+    '/templates/backend-template'
+  ]
 })
