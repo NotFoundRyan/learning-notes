@@ -1,0 +1,17 @@
+{
+  "name": "learning-notes",
+  "version": "1.0.0",
+  "description": "个人学习笔记网站",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0-rc.44",
+    "vue": "^3.4.0",
+    "medium-zoom": "^1.1.0",
+    "markdown-it-mathjax3": "^4.3.2"
+  }
+}
