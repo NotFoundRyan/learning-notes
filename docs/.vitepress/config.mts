@@ -115,8 +115,8 @@ export default defineConfig({
   lastUpdated: true,
 
   ignoreDeadLinks: [
-    '/templates/algorithm-template',
-    '/templates/frontend-template',
-    '/templates/backend-template'
+    '/templates/algorithm-template.md',
+    '/templates/frontend-template.md',
+    '/templates/backend-template.md'
   ]
 })
