@@ -15,9 +15,7 @@ export default defineConfig({
 
     nav: [
       { text: '首页', link: '/' },
-      { text: '笔记', link: '/notes/' },
-      { text: '演示', link: '/demos/' },
-      { text: '模板', link: '/templates/' }
+      { text: '笔记', link: '/notes/' }
     ],
 
     sidebar: {
@@ -25,36 +23,13 @@ export default defineConfig({
         {
           text: '学习笔记',
           items: [
-            { text: '笔记索引', link: '/notes/' },
-            { text: 'Markdown 示例', link: '/notes/markdown-examples' },
-            { text: '代码示例', link: '/notes/code-examples' }
+            { text: '笔记索引', link: '/notes/' }
           ]
         },
         {
           text: '嵌入式开发',
           items: [
             { text: '环形缓冲区', link: '/notes/embedded/ring-buffer' }
-          ]
-        }
-      ],
-      '/demos/': [
-        {
-          text: '演示动画',
-          items: [
-            { text: '演示索引', link: '/demos/' },
-            { text: 'CSS 动画', link: '/demos/css-animation' },
-            { text: 'JS 动画', link: '/demos/js-animation' }
-          ]
-        }
-      ],
-      '/templates/': [
-        {
-          text: '笔记模板',
-          items: [
-            { text: '模板索引', link: '/templates/' },
-            { text: '算法模板', link: '/templates/algorithm-template' },
-            { text: '前端模板', link: '/templates/frontend-template' },
-            { text: '后端模板', link: '/templates/backend-template' }
           ]
         }
       ]
@@ -119,11 +94,5 @@ export default defineConfig({
     math: true
   },
 
-  lastUpdated: true,
-
-  ignoreDeadLinks: [
-    '/templates/algorithm-template',
-    '/templates/frontend-template',
-    '/templates/backend-template'
-  ]
+  lastUpdated: true
 })

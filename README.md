@@ -31,7 +31,6 @@ docs/
 │   └── theme/      # 主题自定义
 ├── notes/          # Markdown 笔记
 │   └── embedded/   # 嵌入式开发笔记
-├── demos/          # 演示文档
 └── public/         # 静态资源
     ├── images/     # 图片资源
     └── demos/      # HTML 演示文件
