@@ -70,7 +70,7 @@ docs/notes/
 ```yaml
 ---
 title: 笔记标题
-date: 2024-01-01
+date: 2026-01-01
 tags: [标签1, 标签2]
 description: 简短描述
 ---

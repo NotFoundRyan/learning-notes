@@ -2,6 +2,10 @@
 
 个人学习笔记网站，基于 VitePress 构建。
 
+## 网站地址
+
+- **在线访问**: https://NotFoundRyan.github.io/learning-notes/
+
 ## 快速开始
 
 ```bash
@@ -26,6 +30,7 @@ docs/
 │   ├── config.mts  # 主配置文件
 │   └── theme/      # 主题自定义
 ├── notes/          # Markdown 笔记
+│   └── embedded/   # 嵌入式开发笔记
 ├── demos/          # 演示文档
 └── public/         # 静态资源
     ├── images/     # 图片资源

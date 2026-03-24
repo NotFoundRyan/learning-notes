@@ -106,9 +106,9 @@ function highlightLines() {
 你可以在 `public/demos/` 目录下放置 HTML 文件，然后在笔记中通过 iframe 嵌入：
 
 ```html
-<iframe src="/demos/css-animation.html" width="100%" height="300"></iframe>
+<iframe src="/learning-notes/demos/css-animation.html" width="100%" height="300"></iframe>
 ```
 
 效果如下：
 
-<iframe src="/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>

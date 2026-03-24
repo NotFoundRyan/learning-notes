@@ -8,13 +8,13 @@
 
 可以在 iframe 中嵌入：
 
-<iframe src="/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
 
 ## JavaScript 动画
 
 [查看 JS 动画演示](/demos/js-animation)
 
-<iframe src="/demos/particle-animation.html" width="100%" height="400" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/particle-animation.html" width="100%" height="400" style="border: none; border-radius: 12px;"></iframe>
 
 ## 如何创建演示
 

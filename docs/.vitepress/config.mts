@@ -29,6 +29,12 @@ export default defineConfig({
             { text: 'Markdown 示例', link: '/notes/markdown-examples' },
             { text: '代码示例', link: '/notes/code-examples' }
           ]
+        },
+        {
+          text: '嵌入式开发',
+          items: [
+            { text: '环形缓冲区', link: '/notes/embedded/ring-buffer' }
+          ]
         }
       ],
       '/demos/': [
@@ -60,7 +66,7 @@ export default defineConfig({
 
     footer: {
       message: '基于 VitePress 构建',
-      copyright: 'Copyright © 2024-present'
+      copyright: 'Copyright © 2026-present'
     },
 
     search: {

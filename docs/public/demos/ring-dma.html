@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMA + 环形缓冲区演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100%;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #4fc3f7;
+            font-size: 16px;
+        }
+        
+        .diagram {
+            background: rgba(45, 55, 72, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .flow-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .flow-box.uart {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+        }
+        
+        .flow-box.dma {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+        }
+        
+        .flow-box.buffer {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            min-width: 120px;
+        }
+        
+        .flow-box.cpu {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: #a0aec0;
+        }
+        
+        .flow-label {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .flow-title {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .buffer-section {
+            margin-top: 16px;
+        }
+        
+        .buffer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .buffer-title {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+        
+        .dma-status {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+        }
+        
+        .dma-status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .dma-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        
+        .dma-status-dot.active {
+            background: #48bb78;
+        }
+        
+        .dma-status-dot.idle {
+            background: #a0aec0;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .buffer-cells {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .cell {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .cell.filled {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-color: #48bb78;
+        }
+        
+        .cell.dma-head {
+            border-color: #9f7aea;
+            box-shadow: 0 0 10px rgba(159, 122, 234, 0.5);
+        }
+        
+        .cell.tail {
+            border-color: #4299e1;
+            box-shadow: 0 0 10px rgba(66, 153, 225, 0.5);
+        }
+        
+        .cell.dma-head.tail {
+            border-color: #ed64a6;
+            box-shadow: 0 0 10px rgba(237, 100, 166, 0.5);
+        }
+        
+        .cell-index {
+            font-size: 9px;
+            color: #a0aec0;
+        }
+        
+        .cell.filled .cell-index {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .cell-data {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .cell.writing {
+            animation: writing 0.3s ease;
+        }
+        
+        @keyframes writing {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #9f7aea; }
+            100% { transform: scale(1); }
+        }
+        
+        .cell.reading {
+            animation: reading 0.3s ease;
+        }
+        
+        @keyframes reading {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #4299e1; }
+            100% { transform: scale(1); }
+        }
+        
+        .pointer-labels {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .pointer-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .pointer-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .pointer-dot.dma { background: #9f7aea; }
+        .pointer-dot.tail { background: #4299e1; }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            background: #1a202c;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #a0aec0;
+            margin-bottom: 2px;
+        }
+        
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .stat-value.dma { color: #9f7aea; }
+        .stat-value.tail { color: #4299e1; }
+        .stat-value.cpu { color: #48bb78; }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-dma {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            color: white;
+        }
+        
+        .btn-cpu {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+        
+        .btn-auto {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn.active {
+            box-shadow: 0 0 12px rgba(72, 187, 120, 0.5);
+        }
+        
+        .info-panel {
+            background: rgba(45, 55, 72, 0.6);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 12px;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .info-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .info-icon.dma { background: rgba(159, 122, 234, 0.2); color: #9f7aea; }
+        .info-icon.cpu { background: rgba(66, 153, 225, 0.2); color: #4299e1; }
+        .info-icon.check { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
+        
+        .speed-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px;
+            background: #1a202c;
+            border-radius: 6px;
+        }
+        
+        .speed-bar {
+            flex: 1;
+            height: 8px;
+            background: #2d3748;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .speed-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #4fc3f7);
+            transition: width 0.3s ease;
+        }
+        
+        .speed-label {
+            font-size: 11px;
+            color: #a0aec0;
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>DMA + 环形缓冲区工作原理</h2>
+        
+        <div class="diagram">
+            <div class="flow-diagram">
+                <div class="flow-box uart">
+                    <div class="flow-title">UART</div>
+                    <div class="flow-label">串口数据</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box dma">
+                    <div class="flow-title">DMA</div>
+                    <div class="flow-label">自动搬运</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box buffer">
+                    <div class="flow-title">Ring Buffer</div>
+                    <div class="flow-label">环形缓冲区</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box cpu">
+                    <div class="flow-title">CPU</div>
+                    <div class="flow-label">处理数据</div>
+                </div>
+            </div>
+            
+            <div class="buffer-section">
+                <div class="buffer-header">
+                    <span class="buffer-title">环形缓冲区 (SIZE = 8)</span>
+                    <div class="dma-status">
+                        <div class="dma-status-item">
+                            <div class="dma-status-dot" id="dmaStatusDot"></div>
+                            <span id="dmaStatusText">DMA 空闲</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pointer-labels">
+                    <div class="pointer-label">
+                        <div class="pointer-dot dma"></div>
+                        <span>DMA 写位置 (head)</span>
+                    </div>
+                    <div class="pointer-label">
+                        <div class="pointer-dot tail"></div>
+                        <span>CPU 读位置 (tail)</span>
+                    </div>
+                </div>
+                
+                <div class="buffer-cells" id="bufferCells"></div>
+                
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">DMA 位置</div>
+                        <div class="stat-value dma" id="dmaPos">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">CPU 位置</div>
+                        <div class="stat-value tail" id="tailPos">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">未处理</div>
+                        <div class="stat-value cpu" id="pending">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">CPU 负载</div>
+                        <div class="stat-value cpu" id="cpuLoad">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-dma" onclick="dmaWrite()">DMA 写入 1 字节</button>
+            <button class="btn btn-cpu" onclick="cpuRead()">CPU 读取 1 字节</button>
+            <button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()">自动演示</button>
+            <button class="btn btn-reset" onclick="reset()">重置</button>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-title">工作流程</div>
+            <div class="info-row">
+                <div class="info-icon dma">1</div>
+                <div>DMA 配置为循环模式，自动将串口数据写入缓冲区，无需 CPU 干预</div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon cpu">2</div>
+                <div>CPU 通过读取 DMA 计数器(NDTR)获取当前写入位置</div>
+            </div>
+            <div class="info-row">
+                <div class="info-icon check">3</div>
+                <div>CPU 在空闲时批量处理数据，处理完成后更新 tail 指针</div>
+            </div>
+            
+            <div class="speed-indicator">
+                <span class="speed-label">数据吞吐量</span>
+                <div class="speed-bar">
+                    <div class="speed-fill" id="throughput" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SIZE = 8;
+        let buffer = new Array(SIZE).fill(null);
+        let dmaHead = 0;
+        let tail = 0;
+        let dataCounter = 1;
+        let autoMode = false;
+        let autoInterval = null;
+        let totalDmaWrites = 0;
+        let totalCpuReads = 0;
+        
+        function init() {
+            const container = document.getElementById('bufferCells');
+            container.innerHTML = '';
+            for (let i = 0; i < SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${i}`;
+                cell.innerHTML = `
+                    <span class="cell-index">[${i}]</span>
+                    <span class="cell-data">-</span>
+                `;
+                container.appendChild(cell);
+            }
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            for (let i = 0; i < SIZE; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                const dataEl = cell.querySelector('.cell-data');
+                
+                let classes = ['cell'];
+                if (buffer[i] !== null) {
+                    classes.push('filled');
+                    dataEl.textContent = buffer[i];
+                } else {
+                    dataEl.textContent = '-';
+                }
+                
+                if (i === dmaHead) classes.push('dma-head');
+                if (i === tail) classes.push('tail');
+                
+                cell.className = classes.join(' ');
+            }
+            
+            document.getElementById('dmaPos').textContent = dmaHead;
+            document.getElementById('tailPos').textContent = tail;
+            
+            const pending = (dmaHead - tail + SIZE) % SIZE;
+            document.getElementById('pending').textContent = pending;
+            
+            const throughput = totalDmaWrites > 0 ? Math.round(totalCpuReads / totalDmaWrites * 100) : 0;
+            document.getElementById('throughput').style.width = Math.min(throughput, 100) + '%';
+            
+            const cpuLoad = Math.min(pending * 12, 100);
+            document.getElementById('cpuLoad').textContent = cpuLoad + '%';
+            
+            const statusDot = document.getElementById('dmaStatusDot');
+            const statusText = document.getElementById('dmaStatusText');
+            if (autoMode) {
+                statusDot.className = 'dma-status-dot active';
+                statusText.textContent = 'DMA 工作中';
+            } else {
+                statusDot.className = 'dma-status-dot idle';
+                statusText.textContent = 'DMA 空闲';
+            }
+        }
+        
+        function dmaWrite() {
+            const next = (dmaHead + 1) % SIZE;
+            if (next === tail) {
+                return false;
+            }
+            
+            buffer[dmaHead] = 'D' + dataCounter++;
+            const cell = document.getElementById(`cell-${dmaHead}`);
+            cell.classList.add('writing');
+            setTimeout(() => cell.classList.remove('writing'), 300);
+            
+            dmaHead = next;
+            totalDmaWrites++;
+            updateDisplay();
+            return true;
+        }
+        
+        function cpuRead() {
+            if (dmaHead === tail) {
+                return false;
+            }
+            
+            const cell = document.getElementById(`cell-${tail}`);
+            cell.classList.add('reading');
+            setTimeout(() => cell.classList.remove('reading'), 300);
+            
+            buffer[tail] = null;
+            tail = (tail + 1) % SIZE;
+            totalCpuReads++;
+            updateDisplay();
+            return true;
+        }
+        
+        function toggleAuto() {
+            autoMode = !autoMode;
+            const btn = document.getElementById('autoBtn');
+            
+            if (autoMode) {
+                btn.classList.add('active');
+                btn.textContent = '停止演示';
+                autoInterval = setInterval(() => {
+                    if (Math.random() > 0.3) {
+                        dmaWrite();
+                    }
+                    if (Math.random() > 0.5) {
+                        cpuRead();
+                    }
+                }, 500);
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '自动演示';
+                clearInterval(autoInterval);
+            }
+            updateDisplay();
+        }
+        
+        function reset() {
+            if (autoMode) {
+                toggleAuto();
+            }
+            buffer = new Array(SIZE).fill(null);
+            dmaHead = 0;
+            tail = 0;
+            dataCounter = 1;
+            totalDmaWrites = 0;
+            totalCpuReads = 0;
+            updateDisplay();
+        }
+        
+        init();
+    </script>
+</body>
+</html>

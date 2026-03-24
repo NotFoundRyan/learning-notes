@@ -4,7 +4,7 @@
 
 ## 渐变背景动画
 
-<iframe src="/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
 
 ## 源码
 

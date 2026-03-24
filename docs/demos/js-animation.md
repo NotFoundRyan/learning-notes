@@ -4,7 +4,7 @@
 
 ## 粒子动画
 
-<iframe src="/demos/particle-animation.html" width="100%" height="400" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/particle-animation.html" width="100%" height="400" style="border: none; border-radius: 12px;"></iframe>
 
 ## 源码
 

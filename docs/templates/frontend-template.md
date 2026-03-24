@@ -1,6 +1,6 @@
 ---
 title: 前端笔记模板
-date: 2024-01-01
+date: 2026-01-01
 tags: [前端, JavaScript, CSS]
 ---
 
@@ -44,7 +44,7 @@ container.addEventListener('click', () => {
 
 ## 实际演示
 
-<iframe src="/demos/demo-placeholder.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
+<iframe src="/learning-notes/demos/css-animation.html" width="100%" height="300" style="border: none; border-radius: 12px;"></iframe>
 
 ## 进阶用法
 

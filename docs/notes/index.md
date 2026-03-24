@@ -24,3 +24,7 @@ docs/
 
 - [Markdown 示例](/notes/markdown-examples) - Markdown 语法示例
 - [代码示例](/notes/code-examples) - 代码高亮和演示示例
+
+## 嵌入式开发
+
+- [环形缓冲区](/notes/embedded/ring-buffer) - 深入理解环形缓冲区的原理与实现，包含 DMA 优化方案

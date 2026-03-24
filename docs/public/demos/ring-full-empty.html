@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环形缓冲区满空判断演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100%;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #4fc3f7;
+            font-size: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            background: transparent;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            background: rgba(79, 195, 247, 0.1);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            border-color: #4fc3f7;
+            color: white;
+        }
+        
+        .buffer-visual {
+            background: rgba(45, 55, 72, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .buffer-cells {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .cell {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            transition: all 0.3s ease;
+        }
+        
+        .cell.filled {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-color: #48bb78;
+        }
+        
+        .cell.head {
+            border-color: #f56565;
+            box-shadow: 0 0 12px rgba(245, 101, 101, 0.5);
+        }
+        
+        .cell.tail {
+            border-color: #4299e1;
+            box-shadow: 0 0 12px rgba(66, 153, 225, 0.5);
+        }
+        
+        .cell.head.tail {
+            border-color: #9f7aea;
+            box-shadow: 0 0 12px rgba(159, 122, 234, 0.5);
+        }
+        
+        .cell-index {
+            font-size: 10px;
+            color: #a0aec0;
+            margin-bottom: 2px;
+        }
+        
+        .cell.filled .cell-index {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .cell-data {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .pointer-labels {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .pointer-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .pointer-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .pointer-dot.head { background: #f56565; }
+        .pointer-dot.tail { background: #4299e1; }
+        
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding: 12px;
+            background: #1a202c;
+            border-radius: 8px;
+        }
+        
+        .status-item {
+            text-align: center;
+        }
+        
+        .status-label {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 4px;
+        }
+        
+        .status-value {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .status-value.head { color: #f56565; }
+        .status-value.tail { color: #4299e1; }
+        .status-value.count { color: #48bb78; }
+        
+        .state-badge {
+            text-align: center;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 12px;
+            display: inline-block;
+        }
+        
+        .state-empty { background: rgba(66, 153, 225, 0.2); color: #4299e1; }
+        .state-full { background: rgba(245, 101, 101, 0.2); color: #f56565; }
+        .state-normal { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-write {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        
+        .btn-read {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .explanation {
+            background: rgba(45, 55, 72, 0.6);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .explanation-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 12px;
+        }
+        
+        .condition {
+            background: #1a202c;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+        
+        .condition-label {
+            color: #a0aec0;
+            margin-bottom: 4px;
+        }
+        
+        .condition-code {
+            color: #48bb78;
+        }
+        
+        .condition-code.warning {
+            color: #f56565;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .comparison-item {
+            background: #1a202c;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .comparison-title {
+            font-size: 12px;
+            color: #4fc3f7;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-text {
+            font-size: 12px;
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>满/空判断问题演示</h2>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="setMode('sacrifice')">方案一：牺牲一个字节</button>
+            <button class="tab" onclick="setMode('count')">方案二：使用 count 变量</button>
+        </div>
+        
+        <div class="buffer-visual">
+            <div class="pointer-labels">
+                <div class="pointer-label">
+                    <div class="pointer-dot head"></div>
+                    <span>head (写指针)</span>
+                </div>
+                <div class="pointer-label">
+                    <div class="pointer-dot tail"></div>
+                    <span>tail (读指针)</span>
+                </div>
+            </div>
+            
+            <div class="buffer-cells" id="bufferCells"></div>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-label">head</div>
+                    <div class="status-value head" id="headValue">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">tail</div>
+                    <div class="status-value tail" id="tailValue">0</div>
+                </div>
+                <div class="status-item" id="countItem">
+                    <div class="status-label">count</div>
+                    <div class="status-value count" id="countValue">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">容量</div>
+                    <div class="status-value" id="capacityValue">0/8</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <span class="state-badge state-empty" id="stateBadge">空</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-write" id="writeBtn" onclick="writeData()">写入</button>
+            <button class="btn btn-read" id="readBtn" onclick="readData()">读取</button>
+            <button class="btn btn-reset" onclick="reset()">重置</button>
+        </div>
+        
+        <div class="explanation">
+            <div class="explanation-title" id="explanationTitle">当前判断逻辑</div>
+            <div id="explanationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const SIZE = 8;
+        let buffer = new Array(SIZE).fill(null);
+        let head = 0;
+        let tail = 0;
+        let count = 0;
+        let dataCounter = 1;
+        let mode = 'sacrifice';
+        
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.tab').forEach((tab, i) => {
+                tab.classList.toggle('active', (i === 0 && mode === 'sacrifice') || (i === 1 && mode === 'count'));
+            });
+            document.getElementById('countItem').style.display = mode === 'count' ? 'block' : 'none';
+            reset();
+            updateExplanation();
+        }
+        
+        function init() {
+            const container = document.getElementById('bufferCells');
+            container.innerHTML = '';
+            for (let i = 0; i < SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${i}`;
+                cell.innerHTML = `
+                    <span class="cell-index">[${i}]</span>
+                    <span class="cell-data">-</span>
+                `;
+                container.appendChild(cell);
+            }
+            updateDisplay();
+            updateExplanation();
+        }
+        
+        function updateDisplay() {
+            for (let i = 0; i < SIZE; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                const dataEl = cell.querySelector('.cell-data');
+                
+                let classes = ['cell'];
+                if (buffer[i] !== null) {
+                    classes.push('filled');
+                    dataEl.textContent = buffer[i];
+                } else {
+                    dataEl.textContent = '-';
+                }
+                
+                if (i === head) classes.push('head');
+                if (i === tail) classes.push('tail');
+                
+                cell.className = classes.join(' ');
+            }
+            
+            document.getElementById('headValue').textContent = head;
+            document.getElementById('tailValue').textContent = tail;
+            document.getElementById('countValue').textContent = count;
+            
+            const actualCount = mode === 'count' ? count : (head - tail + SIZE) % SIZE;
+            const maxCapacity = mode === 'count' ? SIZE : SIZE - 1;
+            document.getElementById('capacityValue').textContent = `${actualCount}/${maxCapacity}`;
+            
+            const stateBadge = document.getElementById('stateBadge');
+            const writeBtn = document.getElementById('writeBtn');
+            const readBtn = document.getElementById('readBtn');
+            
+            const isEmpty = mode === 'count' ? count === 0 : head === tail;
+            const isFull = mode === 'count' ? count === SIZE : (head + 1) % SIZE === tail;
+            
+            if (isEmpty) {
+                stateBadge.textContent = '空';
+                stateBadge.className = 'state-badge state-empty';
+                readBtn.disabled = true;
+            } else if (isFull) {
+                stateBadge.textContent = '满';
+                stateBadge.className = 'state-badge state-full';
+                writeBtn.disabled = true;
+            } else {
+                stateBadge.textContent = '正常';
+                stateBadge.className = 'state-badge state-normal';
+                writeBtn.disabled = false;
+                readBtn.disabled = false;
+            }
+        }
+        
+        function writeData() {
+            if (mode === 'sacrifice') {
+                const next = (head + 1) % SIZE;
+                if (next === tail) return;
+                buffer[head] = 'D' + dataCounter++;
+                head = next;
+            } else {
+                if (count === SIZE) return;
+                buffer[head] = 'D' + dataCounter++;
+                head = (head + 1) % SIZE;
+                count++;
+            }
+            updateDisplay();
+        }
+        
+        function readData() {
+            if (mode === 'sacrifice') {
+                if (head === tail) return;
+                buffer[tail] = null;
+                tail = (tail + 1) % SIZE;
+            } else {
+                if (count === 0) return;
+                buffer[tail] = null;
+                tail = (tail + 1) % SIZE;
+                count--;
+            }
+            updateDisplay();
+        }
+        
+        function reset() {
+            buffer = new Array(SIZE).fill(null);
+            head = 0;
+            tail = 0;
+            count = 0;
+            dataCounter = 1;
+            updateDisplay();
+        }
+        
+        function updateExplanation() {
+            const title = document.getElementById('explanationTitle');
+            const content = document.getElementById('explanationContent');
+            
+            if (mode === 'sacrifice') {
+                title.textContent = '方案一：牺牲一个字节';
+                content.innerHTML = `
+                    <div class="condition">
+                        <div class="condition-label">判断空：</div>
+                        <div class="condition-code">head == tail</div>
+                    </div>
+                    <div class="condition">
+                        <div class="condition-label">判断满：</div>
+                        <div class="condition-code">(head + 1) % SIZE == tail</div>
+                    </div>
+                    <div class="comparison">
+                        <div class="comparison-item">
+                            <div class="comparison-title">优点</div>
+                            <div class="comparison-text">简单直观，无需维护额外变量，无原子性问题</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-title">缺点</div>
+                            <div class="comparison-text">浪费 1 字节空间，实际容量为 SIZE-1</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                title.textContent = '方案二：使用 count 变量';
+                content.innerHTML = `
+                    <div class="condition">
+                        <div class="condition-label">判断空：</div>
+                        <div class="condition-code">count == 0</div>
+                    </div>
+                    <div class="condition">
+                        <div class="condition-label">判断满：</div>
+                        <div class="condition-code">count == SIZE</div>
+                    </div>
+                    <div class="comparison">
+                        <div class="comparison-item">
+                            <div class="comparison-title">优点</div>
+                            <div class="comparison-text">用满全部空间，容量为 SIZE</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-title">缺点</div>
+                            <div class="comparison-text">count 需要原子操作，多线程/中断场景更复杂</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
