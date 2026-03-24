@@ -7,7 +7,16 @@ export default defineConfig({
   base: '/learning-notes/',
 
   head: [
-    ['link', { rel: 'icon', href: '/logo.svg' }]
+    ['link', { rel: 'icon', href: '/logo.svg' }],
+    ['meta', { name: 'description', content: '个人学习笔记网站，记录嵌入式开发、前端技术等学习心得' }],
+    ['meta', { name: 'keywords', content: '学习笔记,嵌入式开发,前端技术,编程,环形缓冲区' }],
+    ['meta', { property: 'og:title', content: '学习笔记' }],
+    ['meta', { property: 'og:description', content: '个人学习笔记网站，记录嵌入式开发、前端技术等学习心得' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:url', content: 'https://NotFoundRyan.github.io/learning-notes/' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: '学习笔记' }],
+    ['meta', { name: 'twitter:description', content: '个人学习笔记网站，记录嵌入式开发、前端技术等学习心得' }]
   ],
 
   themeConfig: {
@@ -28,8 +37,15 @@ export default defineConfig({
         },
         {
           text: '嵌入式开发',
+          collapsed: false,
           items: [
-            { text: '环形缓冲区', link: '/notes/embedded/ring-buffer' }
+            { text: '环形缓冲区', link: '/notes/embedded/ring-buffer' },
+            { text: '回调函数', link: '/notes/embedded/callback' },
+            { text: '状态机', link: '/notes/embedded/state-machine' },
+            { text: '数据封装', link: '/notes/embedded/data-encapsulation' },
+            { text: '串口数据', link: '/notes/embedded/uart-data' },
+            { text: '通信协议', link: '/notes/embedded/protocol' },
+            { text: 'UDP/TCP', link: '/notes/embedded/network' }
           ]
         }
       ]
@@ -94,5 +110,9 @@ export default defineConfig({
     math: true
   },
 
-  lastUpdated: true
+  lastUpdated: true,
+
+  sitemap: {
+    hostname: 'https://NotFoundRyan.github.io/learning-notes/'
+  }
 })

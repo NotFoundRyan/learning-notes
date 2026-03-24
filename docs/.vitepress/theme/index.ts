@@ -6,13 +6,18 @@ import mediumZoom from 'medium-zoom'
 import BackToTop from './components/BackToTop.vue'
 import ReadingStats from './components/ReadingStats.vue'
 import GiscusComments from './components/GiscusComments.vue'
+import CopyCode from './components/CopyCode.vue'
+import ReadingProgress from './components/ReadingProgress.vue'
 
 export default {
   ...DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       'doc-after': () => h(GiscusComments),
-      'doc-before': () => h(ReadingStats)
+      'doc-before': () => h(ReadingStats),
+      'layout-bottom': () => h(BackToTop),
+      'content-bottom': () => h(CopyCode),
+      'layout-top': () => h(ReadingProgress)
     })
   },
   setup() {

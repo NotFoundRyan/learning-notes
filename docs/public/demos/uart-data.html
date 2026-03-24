@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>串口数据演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #fa709a;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .uart-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .uart-simulator {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .terminal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 300px;
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+        
+        .terminal-title {
+            color: #888;
+            font-size: 12px;
+            margin-left: auto;
+        }
+        
+        .terminal-content {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #00ff88;
+            line-height: 1.6;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .terminal-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .terminal-input input {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .terminal-input input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        .terminal-input button {
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .buffer-visualizer {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .buffer-diagram {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .buffer-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .buffer-cell.filled {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .buffer-cell.head {
+            border-color: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .buffer-cell.tail {
+            border-color: #f44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+        
+        .buffer-pointer {
+            padding: 5px 10px;
+            background: #333;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(250, 112, 154, 0.4);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fa709a;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .config-item label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .config-item select,
+        .config-item input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .config-item select:focus,
+        .config-item input:focus {
+            outline: none;
+            border-color: #fa709a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 串口数据演示</h1>
+        
+        <div class="card">
+            <h2>串口配置</h2>
+            <div class="config-panel">
+                <div class="config-item">
+                    <label>波特率</label>
+                    <select id="baudRate">
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="115200" selected>115200</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>数据位</label>
+                    <select id="dataBits">
+                        <option value="7">7</option>
+                        <option value="8" selected>8</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>停止位</label>
+                    <select id="stopBits">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>校验位</label>
+                    <select id="parity">
+                        <option value="none" selected>None</option>
+                        <option value="odd">Odd</option>
+                        <option value="even">Even</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>串口终端模拟</h2>
+            <div class="uart-simulator">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <div class="terminal-title">TX - 发送端</div>
+                    </div>
+                    <div class="terminal-content" id="txTerminal">
+                        <div>准备发送数据...</div>
+                    </div>
+                    <div class="terminal-input">
+                        <input type="text" id="txInput" placeholder="输入要发送的数据" onkeypress="if(event.key==='Enter')sendData()">
+                        <button onclick="sendData()">发送</button>
+                    </div>
+                </div>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <div class="terminal-title">RX - 接收端</div>
+                    </div>
+                    <div class="terminal-content" id="rxTerminal">
+                        <div>等待接收数据...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>环形缓冲区可视化</h2>
+            <div class="buffer-visualizer">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span>缓冲区大小: <strong>16</strong> 字节</span>
+                    <span>已用: <strong id="bufferUsed">0</strong> 字节</span>
+                </div>
+                <div class="buffer-diagram" id="bufferDiagram">
+                </div>
+                <div style="display: flex; gap: 20px; margin-top: 15px;">
+                    <div><span class="buffer-pointer" style="background: #4caf50;">Head</span> 写入位置</div>
+                    <div><span class="buffer-pointer" style="background: #f44336;">Tail</span> 读取位置</div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button onclick="writeToBuffer(0x41)">写入 'A'</button>
+                <button onclick="writeToBuffer(0x42)">写入 'B'</button>
+                <button onclick="writeToBuffer(0x43)">写入 'C'</button>
+                <button onclick="writeRandomByte()">随机写入</button>
+                <button onclick="readFromBuffer()">读取一字节</button>
+                <button onclick="clearBuffer()">清空缓冲区</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="writeCount">0</div>
+                    <div class="stat-label">写入次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="readCount">0</div>
+                    <div class="stat-label">读取次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="overflowCount">0</div>
+                    <div class="stat-label">溢出次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="bufferUsage">0%</div>
+                    <div class="stat-label">使用率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 环形缓冲区
+        const BUFFER_SIZE = 16;
+        let buffer = new Array(BUFFER_SIZE).fill(0);
+        let head = 0;
+        let tail = 0;
+        let count = 0;
+        let writeCount = 0;
+        let readCount = 0;
+        let overflowCount = 0;
+        
+        // 初始化缓冲区显示
+        function initBufferDisplay() {
+            const diagram = document.getElementById('bufferDiagram');
+            diagram.innerHTML = '';
+            
+            for (let i = 0; i < BUFFER_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'buffer-cell';
+                cell.id = `cell-${i}`;
+                cell.textContent = '--';
+                diagram.appendChild(cell);
+            }
+            
+            updateBufferDisplay();
+        }
+        
+        // 更新缓冲区显示
+        function updateBufferDisplay() {
+            for (let i = 0; i < BUFFER_SIZE; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.className = 'buffer-cell';
+                
+                // 检查是否在有效数据范围内
+                let isFilled = false;
+                if (count > 0) {
+                    if (head > tail) {
+                        isFilled = i >= tail && i < head;
+                    } else {
+                        isFilled = i >= tail || i < head;
+                    }
+                }
+                
+                if (isFilled) {
+                    cell.classList.add('filled');
+                    cell.textContent = buffer[i].toString(16).toUpperCase().padStart(2, '0');
+                } else {
+                    cell.textContent = '--';
+                }
+                
+                // 标记 head 和 tail
+                if (i === head) cell.classList.add('head');
+                if (i === tail) cell.classList.add('tail');
+            }
+            
+            // 更新统计
+            document.getElementById('bufferUsed').textContent = count;
+            document.getElementById('writeCount').textContent = writeCount;
+            document.getElementById('readCount').textContent = readCount;
+            document.getElementById('overflowCount').textContent = overflowCount;
+            document.getElementById('bufferUsage').textContent = Math.round(count / BUFFER_SIZE * 100) + '%';
+        }
+        
+        // 写入缓冲区
+        function writeToBuffer(data) {
+            if (count >= BUFFER_SIZE) {
+                overflowCount++;
+                logToTerminal('txTerminal', `缓冲区已满，数据 0x${data.toString(16).toUpperCase().padStart(2, '0')} 丢失`, 'error');
+                return false;
+            }
+            
+            buffer[head] = data;
+            head = (head + 1) % BUFFER_SIZE;
+            count++;
+            writeCount++;
+            
+            logToTerminal('txTerminal', `写入: 0x${data.toString(16).toUpperCase().padStart(2, '0')} ('${String.fromCharCode(data)}')`);
+            updateBufferDisplay();
+            
+            return true;
+        }
+        
+        // 从缓冲区读取
+        function readFromBuffer() {
+            if (count === 0) {
+                logToTerminal('rxTerminal', '缓冲区为空', 'error');
+                return -1;
+            }
+            
+            const data = buffer[tail];
+            tail = (tail + 1) % BUFFER_SIZE;
+            count--;
+            readCount++;
+            
+            logToTerminal('rxTerminal', `读取: 0x${data.toString(16).toUpperCase().padStart(2, '0')} ('${String.fromCharCode(data)}')`);
+            updateBufferDisplay();
+            
+            return data;
+        }
+        
+        // 清空缓冲区
+        function clearBuffer() {
+            head = 0;
+            tail = 0;
+            count = 0;
+            buffer = new Array(BUFFER_SIZE).fill(0);
+            updateBufferDisplay();
+            logToTerminal('txTerminal', '缓冲区已清空');
+        }
+        
+        // 写入随机字节
+        function writeRandomByte() {
+            const data = Math.floor(Math.random() * 256);
+            writeToBuffer(data);
+        }
+        
+        // 终端日志
+        function logToTerminal(terminalId, message, type = 'normal') {
+            const terminal = document.getElementById(terminalId);
+            const line = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            let color = '#00ff88';
+            if (type === 'error') color = '#ff5f56';
+            else if (type === 'warning') color = '#ffbd2e';
+            
+            line.style.color = color;
+            line.textContent = `[${timestamp}] ${message}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // 限制行数
+            while (terminal.children.length > 50) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+        
+        // 发送数据
+        function sendData() {
+            const input = document.getElementById('txInput');
+            const data = input.value;
+            
+            if (!data) return;
+            
+            logToTerminal('txTerminal', `发送: "${data}"`);
+            
+            // 逐字节写入缓冲区
+            for (let i = 0; i < data.length; i++) {
+                writeToBuffer(data.charCodeAt(i));
+            }
+            
+            // 模拟传输延迟后接收
+            setTimeout(() => {
+                logToTerminal('rxTerminal', `接收: "${data}"`);
+                while (count > 0) {
+                    readFromBuffer();
+                }
+            }, 100);
+            
+            input.value = '';
+        }
+        
+        // 初始化
+        initBufferDisplay();
+    </script>
+</body>
+</html>
