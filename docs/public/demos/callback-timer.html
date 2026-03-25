@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定时器回调演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 300;
+        }
+
+        .card {
+            background: rgba(50, 50, 55, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+
+        .timer-display {
+            font-size: 64px;
+            text-align: center;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            color: #ffffff;
+            margin: 30px 0;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 14px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(60, 60, 65, 0.8);
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(80, 80, 85, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .log-container {
+            background: rgba(25, 25, 30, 0.9);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.event { border-left-color: #888; }
+        .log-entry.callback { border-left-color: #aaa; }
+        .log-entry.action { border-left-color: #ccc; }
+        .log-entry.error { border-left-color: #f44; }
+
+        .log-entry strong {
+            color: #888;
+            font-weight: 500;
+        }
+
+        .callback-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .info-item .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .info-item .value {
+            font-size: 24px;
+            color: #fff;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱ 定时器回调演示</h1>
+
+        <div class="card">
+            <h2>定时器状态</h2>
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+
+            <div class="button-group">
+                <button onclick="startTimer()">▶ 启动定时器</button>
+                <button onclick="stopTimer()">⏹ 停止定时器</button>
+                <button onclick="resetTimer()">↻ 重置定时器</button>
+            </div>
+
+            <div class="callback-info">
+                <div class="info-item">
+                    <div class="label">回调触发次数</div>
+                    <div class="value" id="callbackCount">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">定时器状态</div>
+                    <div class="value" id="timerStatus">停止</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">回调间隔</div>
+                    <div class="value">1 秒</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>回调执行日志</h2>
+            <div class="log-container" id="timerLog">
+                <div class="log-entry event">定时器未启动</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let callbackCount = 0;
+        let timerCallback = null;
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(timerSeconds / 3600);
+            const minutes = Math.floor((timerSeconds % 3600) / 60);
+            const seconds = timerSeconds % 60;
+            const time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = time;
+        }
+
+        function log(message, type = 'event') {
+            const container = document.getElementById('timerLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            container.insertBefore(entry, container.firstChild);
+            while (container.children.length > 20) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        function timerCallback() {
+            timerSeconds++;
+            callbackCount++;
+            updateTimerDisplay();
+            document.getElementById('callbackCount').textContent = callbackCount;
+
+            if (timerSeconds % 5 === 0) {
+                log(`定时器回调: 第 ${timerSeconds} 秒，执行周期任务`, 'callback');
+                log(`执行动作: 更新温度传感器数据`, 'action');
+            } else {
+                log(`定时器回调: 第 ${timerSeconds} 秒`, 'callback');
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) {
+                log('定时器已在运行', 'error');
+                return;
+            }
+
+            log('启动定时器', 'event');
+            document.getElementById('timerStatus').textContent = '运行中';
+            document.getElementById('timerStatus').style.color = '#4f8';
+
+            timerInterval = setInterval(timerCallback, 1000);
+            log('注册回调函数: timerCallback()', 'action');
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                log('停止定时器', 'event');
+                document.getElementById('timerStatus').textContent = '停止';
+                document.getElementById('timerStatus').style.color = '#fff';
+            } else {
+                log('定时器未运行', 'error');
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timerSeconds = 0;
+            callbackCount = 0;
+            updateTimerDisplay();
+            document.getElementById('callbackCount').textContent = '0';
+            log('定时器重置', 'event');
+        }
+
+        updateTimerDisplay();
+    </script>
+</body>
+</html>

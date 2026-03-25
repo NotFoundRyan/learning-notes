@@ -29,7 +29,7 @@ description: 理解 UDP 和 TCP 的区别与应用，实现嵌入式网络通信
 - 丢了会重寄
 - 保证按顺序到达
 
-<iframe src="/learning-notes/demos/network.html" width="100%" height="600" frameborder="0" style="border-radius: 8px; margin: 16px 0;"></iframe>
+<CollapsibleIframe src="/learning-notes/demos/network-compare.html" title="UDP/TCP 对比演示" :height="600" />
 
 ### 特性对比
 

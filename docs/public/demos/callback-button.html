@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按键回调演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: rgba(20, 20, 25, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+        
+        .card {
+            background: rgba(40, 40, 45, 0.6);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .card h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .module {
+            background: rgba(60, 60, 65, 0.8);
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .module.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .module strong {
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .module small {
+            color: #888;
+            font-size: 12px;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .arrow {
+            font-size: 20px;
+            color: #666;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(60, 60, 65, 0.8);
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        button:hover {
+            background: rgba(80, 80, 85, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .log-container {
+            background: rgba(25, 25, 30, 0.9);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid transparent;
+        }
+        
+        .log-entry.event { border-left-color: #888; color: #aaa; }
+        .log-entry.callback { border-left-color: #fff; color: #fff; }
+        .log-entry.action { border-left-color: #ccc; color: #ccc; }
+        .log-entry.error { border-left-color: #f44; color: #f88; }
+        
+        .log-entry strong {
+            color: #666;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⌨ 按键回调演示</h1>
+        
+        <div class="card">
+            <h2>回调函数工作原理</h2>
+            <div class="diagram">
+                <div class="module" id="module1">
+                    <strong>模块 A</strong>
+                    <small>事件源</small>
+                </div>
+                <div class="arrow">→</div>
+                <div class="module" id="module2">
+                    <strong>回调函数</strong>
+                    <small>函数指针</small>
+                </div>
+                <div class="arrow">→</div>
+                <div class="module" id="module3">
+                    <strong>模块 B</strong>
+                    <small>事件处理</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>按键事件模拟</h2>
+            <div class="button-group">
+                <button onclick="simulateKeyPress(0)">按键 0 短按</button>
+                <button onclick="simulateKeyPress(1)">按键 1 短按</button>
+                <button onclick="simulateLongPress(0)">按键 0 长按</button>
+                <button onclick="simulateKeyPress(2)">按键 2 短按</button>
+            </div>
+            <div class="log-container" id="keyLog" style="margin-top: 20px;">
+                <div class="log-entry event">等待按键事件...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const keyCallbacks = {};
+        
+        function log(message, type = 'event') {
+            const container = document.getElementById('keyLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            container.insertBefore(entry, container.firstChild);
+            while (container.children.length > 20) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        function registerKeyCallback(keyId, callback) {
+            keyCallbacks[keyId] = callback;
+            log(`注册按键 ${keyId} 回调成功`, 'action');
+        }
+        
+        function simulateKeyPress(keyId) {
+            log(`按键 ${keyId} 按下`, 'event');
+            
+            document.getElementById('module1').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('module1').classList.remove('active');
+                document.getElementById('module2').classList.add('active');
+            }, 300);
+            
+            setTimeout(() => {
+                document.getElementById('module2').classList.remove('active');
+                document.getElementById('module3').classList.add('active');
+                
+                if (keyCallbacks[keyId]) {
+                    keyCallbacks[keyId](keyId, 'PRESS');
+                }
+            }, 600);
+            
+            setTimeout(() => {
+                document.getElementById('module3').classList.remove('active');
+            }, 900);
+        }
+        
+        function simulateLongPress(keyId) {
+            log(`按键 ${keyId} 长按`, 'event');
+            
+            document.getElementById('module1').classList.add('active');
+            setTimeout(() => document.getElementById('module1').classList.remove('active'), 500);
+            
+            if (keyCallbacks[keyId]) {
+                keyCallbacks[keyId](keyId, 'LONG_PRESS');
+            }
+        }
+        
+        registerKeyCallback(0, (id, event) => {
+            log(`回调执行: 按键 ${id} ${event === 'PRESS' ? '短按' : '长按'}`, 'callback');
+            log(`执行动作: 切换 LED 状态`, 'action');
+        });
+        
+        registerKeyCallback(1, (id, event) => {
+            log(`回调执行: 按键 ${id} 按下`, 'callback');
+            log(`执行动作: 发送数据到服务器`, 'action');
+        });
+        
+        registerKeyCallback(2, (id, event) => {
+            log(`回调执行: 按键 ${id} 按下`, 'callback');
+            log(`执行动作: 进入休眠模式`, 'action');
+        });
+    </script>
+</body>
+</html>

@@ -24,7 +24,8 @@ export default defineConfig({
 
     nav: [
       { text: '首页', link: '/' },
-      { text: '笔记', link: '/notes/' }
+      { text: '笔记', link: '/notes/' },
+      { text: '歌单', link: '/music/' }
     ],
 
     sidebar: {

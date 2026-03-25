@@ -1,0 +1,25 @@
+{
+  "playlists": [
+    {
+      "id": "default",
+      "name": "默认歌单",
+      "description": "我的音乐收藏",
+      "songs": [
+        {
+          "id": 1,
+          "title": "爱喔爱",
+          "artist": "廖语晴",
+          "src": "/learning-notes/music/songs/爱喔爱 - 廖语晴.flac",
+          "lyric": "/learning-notes/music/lyrics/爱喔爱 - 廖语晴.lrc"
+        },
+        {
+          "id": 2,
+          "title": "At The Edge",
+          "artist": "千坂",
+          "src": "/learning-notes/music/songs/At The Edge - 千坂.flac",
+          "lyric": "/learning-notes/music/lyrics/At The Edge - 千坂.lrc"
+        }
+      ]
+    }
+  ]
+}

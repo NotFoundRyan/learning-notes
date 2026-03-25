@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDP/TCP 协议对比</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+            min-height: 100vh;
+            padding: 24px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 24px;
+            font-size: 1.8em;
+            font-weight: 400;
+        }
+        
+        .card {
+            background: rgba(50, 50, 55, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .card h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .protocol-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .protocol-compare {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .protocol-card {
+            background: rgba(60, 60, 65, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .protocol-card:hover {
+            background: rgba(70, 70, 75, 0.9);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .protocol-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+        
+        .protocol-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .comparison-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 500;
+            color: #ffffff;
+        }
+        
+        .comparison-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .use-case-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .use-case-card {
+            background: rgba(60, 60, 65, 0.8);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        .use-case-card h4 {
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .use-case-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .use-case-card li {
+            padding: 5px 0;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .use-case-card li::before {
+            content: "•";
+            margin-right: 8px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UDP vs TCP 协议对比</h1>
+        
+        <div class="card">
+            <h2>协议特性对比</h2>
+            <div class="protocol-compare">
+                <div class="protocol-card">
+                    <h3>
+                        <span class="protocol-badge">UDP</span>
+                        用户数据报协议
+                    </h3>
+                    <ul class="feature-list">
+                        <li>⚡ 无连接，快速传输</li>
+                        <li>📦 数据包独立，无序</li>
+                        <li>❌ 不保证可靠性</li>
+                        <li>📡 支持广播/组播</li>
+                        <li>💡 适用: 实时音视频、DNS</li>
+                    </ul>
+                </div>
+                
+                <div class="protocol-card">
+                    <h3>
+                        <span class="protocol-badge">TCP</span>
+                        传输控制协议
+                    </h3>
+                    <ul class="feature-list">
+                        <li>🔗 面向连接，三次握手</li>
+                        <li>✅ 可靠传输，有序</li>
+                        <li>🔄 自动重传机制</li>
+                        <li>📊 流量/拥塞控制</li>
+                        <li>💡 适用: HTTP、文件传输</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>UDP</th>
+                        <th>TCP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>连接方式</td>
+                        <td>无连接</td>
+                        <td>面向连接</td>
+                    </tr>
+                    <tr>
+                        <td>可靠性</td>
+                        <td>不保证送达</td>
+                        <td>保证送达</td>
+                    </tr>
+                    <tr>
+                        <td>顺序保证</td>
+                        <td>可能乱序</td>
+                        <td>保证顺序</td>
+                    </tr>
+                    <tr>
+                        <td>传输速度</td>
+                        <td>快</td>
+                        <td>相对慢</td>
+                    </tr>
+                    <tr>
+                        <td>资源消耗</td>
+                        <td>低</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td>首部开销</td>
+                        <td>8 字节</td>
+                        <td>20 字节</td>
+                    </tr>
+                    <tr>
+                        <td>广播/组播</td>
+                        <td>支持</td>
+                        <td>不支持</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>应用场景选择</h2>
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <h4>⚡ UDP 适用场景</h4>
+                    <ul>
+                        <li>实时音视频通话</li>
+                        <li>在线游戏</li>
+                        <li>DNS 查询</li>
+                        <li>局域网设备发现</li>
+                        <li>传感器数据上报</li>
+                    </ul>
+                </div>
+                
+                <div class="use-case-card">
+                    <h4>✅ TCP 适用场景</h4>
+                    <ul>
+                        <li>网页浏览 (HTTP)</li>
+                        <li>文件传输 (FTP)</li>
+                        <li>邮件发送 (SMTP)</li>
+                        <li>远程登录 (SSH)</li>
+                        <li>数据库连接</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>串口缓冲区演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: rgba(50, 50, 55, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+
+        .uart-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .uart-simulator {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .terminal {
+            background: rgba(30, 30, 32, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff6b6b; }
+        .terminal-dot.yellow { background: #ffd93d; }
+        .terminal-dot.green { background: #6bcb77; }
+
+        .terminal-title {
+            color: #666;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .terminal-content {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .terminal-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .terminal-input input {
+            flex: 1;
+            background: rgba(20, 20, 22, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 10px;
+            color: #aaa;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-input input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .terminal-input button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 400;
+            transition: all 0.2s ease;
+        }
+
+        .terminal-input button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .buffer-visualizer {
+            background: rgba(30, 30, 32, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .buffer-diagram {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .buffer-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(50, 50, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .buffer-cell.filled {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .buffer-cell.head {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .buffer-cell.tail {
+            border-color: rgba(150, 150, 150, 0.5);
+            box-shadow: 0 0 10px rgba(150, 150, 150, 0.2);
+        }
+
+        .buffer-pointer {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 400;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(30, 30, 32, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 300;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>串口缓冲区演示</h1>
+
+        <div class="card">
+            <h2>串口终端模拟</h2>
+            <div class="uart-simulator">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <div class="terminal-title">TX - 发送端</div>
+                    </div>
+                    <div class="terminal-content" id="txTerminal">
+                        <div>准备发送数据...</div>
+                    </div>
+                    <div class="terminal-input">
+                        <input type="text" id="txInput" placeholder="输入要发送的数据" onkeypress="if(event.key==='Enter')sendData()">
+                        <button onclick="sendData()">发送</button>
+                    </div>
+                </div>
+
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <div class="terminal-title">RX - 接收端</div>
+                    </div>
+                    <div class="terminal-content" id="rxTerminal">
+                        <div>等待接收数据...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>环形缓冲区可视化</h2>
+            <div class="buffer-visualizer">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #888;">
+                    <span>缓冲区大小: <strong style="color: #e0e0e0;">16</strong> 字节</span>
+                    <span>已用: <strong style="color: #fff;" id="bufferUsed">0</strong> 字节</span>
+                </div>
+                <div class="buffer-diagram" id="bufferDiagram">
+                </div>
+                <div style="display: flex; gap: 20px; margin-top: 15px; color: #888;">
+                    <div><span class="buffer-pointer" style="background: rgba(255, 255, 255, 0.2); color: #fff;">Head</span> 写入位置</div>
+                    <div><span class="buffer-pointer" style="background: rgba(150, 150, 150, 0.3); color: #ccc;">Tail</span> 读取位置</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="writeToBuffer(0x41)">写入 'A'</button>
+                <button onclick="writeToBuffer(0x42)">写入 'B'</button>
+                <button onclick="writeToBuffer(0x43)">写入 'C'</button>
+                <button onclick="writeRandomByte()">随机写入</button>
+                <button onclick="readFromBuffer()">读取一字节</button>
+                <button onclick="clearBuffer()">清空缓冲区</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="writeCount">0</div>
+                    <div class="stat-label">写入次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="readCount">0</div>
+                    <div class="stat-label">读取次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="overflowCount">0</div>
+                    <div class="stat-label">溢出次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="bufferUsage">0%</div>
+                    <div class="stat-label">使用率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BUFFER_SIZE = 16;
+        let buffer = new Array(BUFFER_SIZE).fill(0);
+        let head = 0;
+        let tail = 0;
+        let count = 0;
+        let writeCount = 0;
+        let readCount = 0;
+        let overflowCount = 0;
+
+        function initBufferDisplay() {
+            const diagram = document.getElementById('bufferDiagram');
+            diagram.innerHTML = '';
+
+            for (let i = 0; i < BUFFER_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'buffer-cell';
+                cell.id = `cell-${i}`;
+                cell.textContent = '--';
+                diagram.appendChild(cell);
+            }
+
+            updateBufferDisplay();
+        }
+
+        function updateBufferDisplay() {
+            for (let i = 0; i < BUFFER_SIZE; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.className = 'buffer-cell';
+
+                let isFilled = false;
+                if (count > 0) {
+                    if (head > tail) {
+                        isFilled = i >= tail && i < head;
+                    } else {
+                        isFilled = i >= tail || i < head;
+                    }
+                }
+
+                if (isFilled) {
+                    cell.classList.add('filled');
+                    cell.textContent = buffer[i].toString(16).toUpperCase().padStart(2, '0');
+                } else {
+                    cell.textContent = '--';
+                }
+
+                if (i === head) cell.classList.add('head');
+                if (i === tail) cell.classList.add('tail');
+            }
+
+            document.getElementById('bufferUsed').textContent = count;
+            document.getElementById('writeCount').textContent = writeCount;
+            document.getElementById('readCount').textContent = readCount;
+            document.getElementById('overflowCount').textContent = overflowCount;
+            document.getElementById('bufferUsage').textContent = Math.round(count / BUFFER_SIZE * 100) + '%';
+        }
+
+        function writeToBuffer(data) {
+            if (count >= BUFFER_SIZE) {
+                overflowCount++;
+                logToTerminal('txTerminal', `缓冲区已满，数据 0x${data.toString(16).toUpperCase().padStart(2, '0')} 丢失`, 'error');
+                return false;
+            }
+
+            buffer[head] = data;
+            head = (head + 1) % BUFFER_SIZE;
+            count++;
+            writeCount++;
+
+            logToTerminal('txTerminal', `写入: 0x${data.toString(16).toUpperCase().padStart(2, '0')} ('${String.fromCharCode(data)}')`);
+            updateBufferDisplay();
+
+            return true;
+        }
+
+        function readFromBuffer() {
+            if (count === 0) {
+                logToTerminal('rxTerminal', '缓冲区为空', 'error');
+                return -1;
+            }
+
+            const data = buffer[tail];
+            tail = (tail + 1) % BUFFER_SIZE;
+            count--;
+            readCount++;
+
+            logToTerminal('rxTerminal', `读取: 0x${data.toString(16).toUpperCase().padStart(2, '0')} ('${String.fromCharCode(data)}')`);
+            updateBufferDisplay();
+
+            return data;
+        }
+
+        function clearBuffer() {
+            head = 0;
+            tail = 0;
+            count = 0;
+            buffer = new Array(BUFFER_SIZE).fill(0);
+            updateBufferDisplay();
+            logToTerminal('txTerminal', '缓冲区已清空');
+        }
+
+        function writeRandomByte() {
+            const data = Math.floor(Math.random() * 256);
+            writeToBuffer(data);
+        }
+
+        function logToTerminal(terminalId, message, type = 'normal') {
+            const terminal = document.getElementById(terminalId);
+            const line = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+
+            let color = '#aaa';
+            if (type === 'error') color = '#ff6b6b';
+
+            line.style.color = color;
+            line.textContent = `[${timestamp}] ${message}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            while (terminal.children.length > 50) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        function sendData() {
+            const input = document.getElementById('txInput');
+            const data = input.value;
+
+            if (!data) return;
+
+            logToTerminal('txTerminal', `发送: "${data}"`);
+
+            for (let i = 0; i < data.length; i++) {
+                writeToBuffer(data.charCodeAt(i));
+            }
+
+            setTimeout(() => {
+                logToTerminal('rxTerminal', `接收: "${data}"`);
+                while (count > 0) {
+                    readFromBuffer();
+                }
+            }, 100);
+
+            input.value = '';
+        }
+
+        initBufferDisplay();
+    </script>
+</body>
+</html>

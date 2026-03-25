@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>串口配置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: rgba(50, 50, 55, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .config-item label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .config-item select,
+        .config-item input {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(30, 30, 32, 0.8);
+            color: #e0e0e0;
+            transition: border-color 0.3s ease;
+        }
+
+        .config-item select:focus,
+        .config-item input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .param-table th,
+        .param-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .param-table th {
+            background: rgba(30, 30, 32, 0.8);
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .param-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .param-value {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .timing-diagram {
+            background: rgba(30, 30, 32, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .timing-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .timing-label {
+            width: 80px;
+            font-weight: 500;
+            color: #888;
+        }
+
+        .timing-signal {
+            flex: 1;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .timing-bit {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .timing-bit.high {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .timing-bit.low {
+            background: rgba(100, 100, 100, 0.5);
+        }
+
+        .timing-bit.start {
+            background: rgba(100, 100, 100, 0.6);
+        }
+
+        .timing-bit.stop {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+
+        .info-box h4 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>串口配置参数</h1>
+
+        <div class="card">
+            <h2>串口参数配置</h2>
+            <div class="config-panel">
+                <div class="config-item">
+                    <label>波特率</label>
+                    <select id="baudRate" onchange="updateTiming()">
+                        <option value="9600">9600</option>
+                        <option value="19200">19200</option>
+                        <option value="38400">38400</option>
+                        <option value="57600">57600</option>
+                        <option value="115200" selected>115200</option>
+                        <option value="230400">230400</option>
+                        <option value="460800">460800</option>
+                        <option value="921600">921600</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>数据位</label>
+                    <select id="dataBits" onchange="updateTiming()">
+                        <option value="7">7</option>
+                        <option value="8" selected>8</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>停止位</label>
+                    <select id="stopBits" onchange="updateTiming()">
+                        <option value="1" selected>1</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>校验位</label>
+                    <select id="parity" onchange="updateTiming()">
+                        <option value="none" selected>None</option>
+                        <option value="odd">Odd</option>
+                        <option value="even">Even</option>
+                    </select>
+                </div>
+            </div>
+
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>值</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>波特率</td>
+                        <td><span class="param-value" id="baudValue">115200</span></td>
+                        <td>每秒传输的比特数</td>
+                    </tr>
+                    <tr>
+                        <td>位时间</td>
+                        <td><span class="param-value" id="bitTime">8.68 μs</span></td>
+                        <td>传输一个比特所需时间</td>
+                    </tr>
+                    <tr>
+                        <td>帧长度</td>
+                        <td><span class="param-value" id="frameBits">10 bits</span></td>
+                        <td>起始位 + 数据位 + 停止位</td>
+                    </tr>
+                    <tr>
+                        <td>字节传输时间</td>
+                        <td><span class="param-value" id="byteTime">86.8 μs</span></td>
+                        <td>传输一个字节所需时间</td>
+                    </tr>
+                    <tr>
+                        <td>理论吞吐量</td>
+                        <td><span class="param-value" id="throughput">11520 B/s</span></td>
+                        <td>每秒传输的字节数</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>数据帧时序图</h2>
+            <div class="timing-diagram">
+                <div class="timing-row">
+                    <div class="timing-label">数据帧</div>
+                    <div class="timing-signal" id="timingSignal">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; color: #666;">
+                    <span>← 起始位</span>
+                    <span>数据位 (D0-D7) →</span>
+                    <span>停止位 →</span>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>串口通信要点</h4>
+                <ul>
+                    <li><strong>空闲状态</strong>：TX 线保持高电平</li>
+                    <li><strong>起始位</strong>：1 位低电平，标志帧开始</li>
+                    <li><strong>数据位</strong>：5~8 位，低位先发</li>
+                    <li><strong>校验位</strong>：可选，用于错误检测</li>
+                    <li><strong>停止位</strong>：1~2 位高电平，标志帧结束</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTiming() {
+            const baud = parseInt(document.getElementById('baudRate').value);
+            const dataBits = parseInt(document.getElementById('dataBits').value);
+            const stopBits = parseFloat(document.getElementById('stopBits').value);
+            const parity = document.getElementById('parity').value;
+
+            const bitTime = 1000000 / baud;
+            const parityBits = parity === 'none' ? 0 : 1;
+            const frameBits = 1 + dataBits + parityBits + stopBits;
+            const byteTime = bitTime * frameBits;
+            const throughput = baud / frameBits;
+
+            document.getElementById('baudValue').textContent = baud;
+            document.getElementById('bitTime').textContent = bitTime.toFixed(2) + ' μs';
+            document.getElementById('frameBits').textContent = frameBits + ' bits';
+            document.getElementById('byteTime').textContent = byteTime.toFixed(2) + ' μs';
+            document.getElementById('throughput').textContent = Math.round(throughput) + ' B/s';
+
+            updateTimingDiagram(dataBits, parityBits, stopBits);
+        }
+
+        function updateTimingDiagram(dataBits, parityBits, stopBits) {
+            const signal = document.getElementById('timingSignal');
+            signal.innerHTML = '';
+
+            const totalBits = 1 + dataBits + parityBits + stopBits;
+            const bitWidth = 100 / totalBits;
+
+            let pos = 0;
+
+            const startBit = document.createElement('div');
+            startBit.className = 'timing-bit start';
+            startBit.style.left = pos + '%';
+            startBit.style.width = bitWidth + '%';
+            signal.appendChild(startBit);
+            pos += bitWidth;
+
+            for (let i = 0; i < dataBits; i++) {
+                const dataBit = document.createElement('div');
+                dataBit.className = 'timing-bit ' + (Math.random() > 0.5 ? 'high' : 'low');
+                dataBit.style.left = pos + '%';
+                dataBit.style.width = bitWidth + '%';
+                signal.appendChild(dataBit);
+                pos += bitWidth;
+            }
+
+            if (parityBits > 0) {
+                const parityBit = document.createElement('div');
+                parityBit.className = 'timing-bit high';
+                parityBit.style.left = pos + '%';
+                parityBit.style.width = bitWidth + '%';
+                signal.appendChild(parityBit);
+                pos += bitWidth;
+            }
+
+            for (let i = 0; i < stopBits; i++) {
+                const stopBit = document.createElement('div');
+                stopBit.className = 'timing-bit stop';
+                stopBit.style.left = pos + '%';
+                stopBit.style.width = bitWidth + '%';
+                signal.appendChild(stopBit);
+                pos += bitWidth;
+            }
+        }
+
+        updateTiming();
+    </script>
+</body>
+</html>

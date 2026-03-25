@@ -118,7 +118,7 @@ title: 学习笔记索引
 
 - [回调函数演示](/demos/callback.html)
 - [状态机演示](/demos/state-machine.html)
-- [数据封装演示](/demos/data-encapsulation.html)
-- [串口数据演示](/demos/uart-data.html)
-- [通信协议演示](/demos/protocol.html)
-- [网络通信演示](/demos/network.html)
+- [数据封装演示](/demos/data-frame.html)
+- [串口数据演示](/demos/uart-buffer.html)
+- [通信协议演示](/demos/protocol-flow.html)
+- [网络通信演示](/demos/network-compare.html)

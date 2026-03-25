@@ -1,7 +1,7 @@
 :root {
   --vp-c-white: #ffffff;
   --vp-c-black: #1a1a1a;
-  
+
   --vp-c-gray-1: #f5f5f5;
   --vp-c-gray-2: #e5e5e5;
   --vp-c-gray-3: #d4d4d4;
@@ -48,7 +48,7 @@
   --glass-blur: blur(20px);
   --glass-border: 1px solid rgba(255, 255, 255, 0.18);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
-  
+
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
@@ -125,7 +125,12 @@ html.dark {
   box-shadow: var(--glass-shadow);
   padding: 32px 48px !important;
   margin: 24px 0;
+  max-width: 1200px !important;
   animation: fadeInUp 0.6s ease;
+}
+
+.VPDoc .content-container > .content {
+  max-width: 100% !important;
 }
 
 @keyframes fadeInUp {

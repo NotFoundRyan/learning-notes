@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRC 校验计算</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: rgba(50, 50, 55, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #888;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(30, 30, 32, 0.8);
+            color: #e0e0e0;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-group textarea {
+            font-family: 'Courier New', monospace;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 400;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .hex-display {
+            background: rgba(30, 30, 32, 0.8);
+            color: #aaa;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hex-display .byte {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .hex-display .byte:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .hex-display .byte.header { background: rgba(255, 255, 255, 0.15); }
+        .hex-display .byte.length { background: rgba(180, 180, 180, 0.15); }
+        .hex-display .byte.cmd { background: rgba(120, 120, 120, 0.2); }
+        .hex-display .byte.data { background: rgba(80, 80, 80, 0.25); }
+        .hex-display .byte.crc { background: rgba(60, 60, 60, 0.3); }
+        .hex-display .byte.tail { background: rgba(40, 40, 40, 0.35); }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(30, 30, 32, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 300;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .log-container {
+            background: rgba(30, 30, 32, 0.8);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-entry {
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .log-entry.pack { background: rgba(255, 255, 255, 0.05); border-left: 3px solid rgba(255, 255, 255, 0.3); color: #ccc; }
+        .log-entry.unpack { background: rgba(120, 120, 120, 0.1); border-left: 3px solid rgba(150, 150, 150, 0.5); color: #aaa; }
+        .log-entry.error { background: rgba(255, 107, 107, 0.1); border-left: 3px solid #ff6b6b; color: #ff6b6b; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CRC 校验计算</h1>
+
+        <div class="card">
+            <h2>数据打包</h2>
+            <div class="input-group">
+                <label>命令类型</label>
+                <select id="commandSelect">
+                    <option value="01">0x01 - 读版本</option>
+                    <option value="02">0x02 - 读状态</option>
+                    <option value="03">0x03 - 设置配置</option>
+                    <option value="05">0x05 - 读数据</option>
+                    <option value="06">0x06 - 写数据</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>数据内容 (十六进制，空格分隔)</label>
+                <textarea id="dataInput" placeholder="例如: 01 02 03 04 05">12 34 56 78</textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="packFrame()">打包数据</button>
+                <button onclick="packRandomData()">随机数据</button>
+                <button onclick="clearData()">清空</button>
+            </div>
+
+            <div class="hex-display" id="hexDisplay">
+                点击"打包数据"查看结果...
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalLength">0</div>
+                    <div class="stat-label">总长度 (bytes)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="dataLength">0</div>
+                    <div class="stat-label">数据长度</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="crcValueStat">--</div>
+                    <div class="stat-label">CRC 值</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>数据解包</h2>
+            <div class="input-group">
+                <label>接收数据 (十六进制，空格分隔)</label>
+                <textarea id="unpackInput" placeholder="粘贴完整帧数据"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="unpackFrame()">解包数据</button>
+                <button onclick="loadLastFrame()">加载最后打包的帧</button>
+            </div>
+
+            <div class="log-container" id="unpackLog">
+                <div class="log-entry unpack">等待解包...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastPackedFrame = [];
+
+        function calculateCRC16(data) {
+            let crc = 0xFFFF;
+
+            for (let i = 0; i < data.length; i++) {
+                crc ^= data[i];
+                for (let j = 0; j < 8; j++) {
+                    if (crc & 0x0001) {
+                        crc = (crc >> 1) ^ 0xA001;
+                    } else {
+                        crc >>= 1;
+                    }
+                }
+            }
+
+            return crc;
+        }
+
+        function parseHexString(str) {
+            const bytes = str.trim().split(/\s+/).map(s => parseInt(s, 16));
+            return bytes.filter(b => !isNaN(b));
+        }
+
+        function formatHexDisplay(bytes, types) {
+            let html = '';
+            bytes.forEach((byte, index) => {
+                const type = types[index] || 'data';
+                html += `<span class="byte ${type}">${byte.toString(16).toUpperCase().padStart(2, '0')}</span>`;
+            });
+            return html;
+        }
+
+        function packFrame() {
+            const command = parseInt(document.getElementById('commandSelect').value, 16);
+            const dataStr = document.getElementById('dataInput').value;
+            const data = parseHexString(dataStr);
+
+            const frame = [];
+            const types = [];
+
+            frame.push(0xAA, 0x55);
+            types.push('header', 'header');
+
+            frame.push(data.length + 1);
+            types.push('length');
+
+            frame.push(command);
+            types.push('cmd');
+
+            data.forEach(byte => {
+                frame.push(byte);
+                types.push('data');
+            });
+
+            const crcData = frame.slice(3);
+            const crc = calculateCRC16(crcData);
+            frame.push(crc & 0xFF, (crc >> 8) & 0xFF);
+            types.push('crc', 'crc');
+
+            frame.push(0x0D);
+            types.push('tail');
+
+            lastPackedFrame = [...frame];
+
+            document.getElementById('hexDisplay').innerHTML = formatHexDisplay(frame, types);
+
+            document.getElementById('totalLength').textContent = frame.length;
+            document.getElementById('dataLength').textContent = data.length;
+            document.getElementById('crcValueStat').textContent = '0x' + crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function packRandomData() {
+            const length = Math.floor(Math.random() * 8) + 1;
+            const data = [];
+            for (let i = 0; i < length; i++) {
+                data.push(Math.floor(Math.random() * 256));
+            }
+            document.getElementById('dataInput').value = data.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+            packFrame();
+        }
+
+        function clearData() {
+            document.getElementById('dataInput').value = '';
+            document.getElementById('hexDisplay').innerHTML = '点击"打包数据"查看结果...';
+            document.getElementById('totalLength').textContent = '0';
+            document.getElementById('dataLength').textContent = '0';
+            document.getElementById('crcValueStat').textContent = '--';
+        }
+
+        function unpackFrame() {
+            const inputStr = document.getElementById('unpackInput').value;
+            const frame = parseHexString(inputStr);
+            const log = document.getElementById('unpackLog');
+            log.innerHTML = '';
+
+            function addLog(message, type = 'unpack') {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = message;
+                log.insertBefore(entry, log.firstChild);
+            }
+
+            if (frame.length < 7) {
+                addLog('错误: 帧长度不足', 'error');
+                return;
+            }
+
+            if (frame[0] !== 0xAA || frame[1] !== 0x55) {
+                addLog('错误: 帧头不正确', 'error');
+                return;
+            }
+
+            addLog('✓ 帧头正确: AA 55');
+
+            const length = frame[2];
+            addLog(`✓ 数据长度: ${length} bytes`);
+
+            if (frame[frame.length - 1] !== 0x0D) {
+                addLog('错误: 帧尾不正确', 'error');
+                return;
+            }
+            addLog('✓ 帧尾正确: 0D');
+
+            const command = frame[3];
+            addLog(`✓ 命令字: 0x${command.toString(16).toUpperCase().padStart(2, '0')}`);
+
+            const dataLength = length - 1;
+            const data = frame.slice(4, 4 + dataLength);
+            if (data.length > 0) {
+                addLog(`✓ 数据: ${data.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ')}`);
+            }
+
+            const receivedCRC = frame[frame.length - 3] | (frame[frame.length - 2] << 8);
+            const calculatedCRC = calculateCRC16(frame.slice(3, 4 + dataLength));
+
+            if (receivedCRC === calculatedCRC) {
+                addLog(`✓ CRC 校验通过: 0x${receivedCRC.toString(16).toUpperCase().padStart(4, '0')}`);
+                addLog('✓ 解包成功！');
+            } else {
+                addLog(`错误: CRC 校验失败 (接收: 0x${receivedCRC.toString(16).toUpperCase().padStart(4, '0')}, 计算: 0x${calculatedCRC.toString(16).toUpperCase().padStart(4, '0')})`, 'error');
+            }
+        }
+
+        function loadLastFrame() {
+            if (lastPackedFrame.length > 0) {
+                document.getElementById('unpackInput').value =
+                    lastPackedFrame.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+            }
+        }
+
+        packFrame();
+    </script>
+</body>
+</html>
