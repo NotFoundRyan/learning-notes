@@ -12,223 +12,435 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100%;
             padding: 20px;
-            color: #e0e0e0;
+            color: #333;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 700px;
             margin: 0 auto;
         }
         
-        h1 {
+        h2 {
             text-align: center;
-            color: #ffffff;
-            margin-bottom: 30px;
-            font-size: 2em;
-            font-weight: 300;
-        }
-        
-        .card {
-            background: rgba(50, 50, 55, 0.6);
-            backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 24px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
         }
         
-        .card h2 {
-            color: #ffffff;
+        .event-sources {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             margin-bottom: 20px;
-            font-size: 1.3em;
-            font-weight: 400;
         }
         
-        .button-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        button {
-            padding: 14px 28px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            background: rgba(60, 60, 65, 0.8);
-            color: #e0e0e0;
-            font-size: 14px;
-            cursor: pointer;
+        .event-source {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.2s ease;
         }
         
-        button:hover {
-            background: rgba(80, 80, 85, 0.9);
-            border-color: rgba(255, 255, 255, 0.25);
+        .event-source:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .event-source.active {
+            background: #333;
+            color: white;
+        }
+        
+        .event-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .event-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .event-desc {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .event-source.active .event-desc {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .event-queue {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .queue-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .queue-count {
+            font-size: 12px;
+            padding: 4px 12px;
+            background: #e8e8e8;
+            border-radius: 12px;
+            color: #666;
+        }
+        
+        .queue-items {
+            display: flex;
+            gap: 8px;
+            min-height: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .queue-item {
+            padding: 8px 16px;
+            background: #fafafa;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            border: 1px solid #e8e8e8;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .queue-empty {
+            color: #999;
+            font-size: 13px;
+        }
+        
+        .handlers {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .handlers-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .handler-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .handler-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .handler-item.active {
+            background: #333;
+            color: white;
+        }
+        
+        .handler-event {
+            padding: 4px 10px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .handler-item.active .handler-event {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .handler-name {
+            flex: 1;
+            font-size: 13px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #333;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background: #e8e8e8;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #ddd;
             transform: translateY(-2px);
         }
         
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 16px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            color: #fff;
-            font-weight: 300;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #888;
-            margin-top: 8px;
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
         }
         
         .log-container {
-            background: rgba(25, 25, 30, 0.9);
-            border-radius: 10px;
-            padding: 16px;
-            max-height: 250px;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 150px;
             overflow-y: auto;
-            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            margin-top: 20px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            margin-top: 15px;
         }
         
         .log-entry {
-            padding: 8px 12px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.03);
-            border-left: 3px solid transparent;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            background: white;
+            border-left: 3px solid #ccc;
         }
         
-        .log-entry.event { border-left-color: #888; }
-        .log-entry.callback { border-left-color: #aaa; }
-        .log-entry.action { border-left-color: #ccc; }
-        .log-entry.error { border-left-color: #f44; }
+        .log-entry.dispatch {
+            border-left-color: #333;
+        }
         
-        .log-entry strong {
-            color: #888;
-            font-weight: 500;
+        .log-entry.handle {
+            border-left-color: #666;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚡ 事件回调演示</h1>
+        <h2>事件回调演示</h2>
         
-        <div class="card">
-            <h2>事件触发模拟</h2>
-            <div class="button-group">
-                <button onclick="triggerEvent('temperature')">🌡 温度更新</button>
-                <button onclick="triggerEvent('humidity')">💧 湿度更新</button>
-                <button onclick="triggerEvent('pressure')">📊 气压更新</button>
-                <button onclick="triggerEvent('error')">⚠ 错误事件</button>
+        <div class="event-sources">
+            <div class="event-source" id="src-uart" onclick="triggerEvent('UART_RX')">
+                <div class="event-icon">📡</div>
+                <div class="event-name">UART 接收</div>
+                <div class="event-desc">串口数据到达</div>
             </div>
-            
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="tempValue">--</div>
-                    <div class="stat-label">温度 (°C)</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="humidValue">--</div>
-                    <div class="stat-label">湿度 (%)</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="pressValue">--</div>
-                    <div class="stat-label">气压 (hPa)</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="eventCount">0</div>
-                    <div class="stat-label">事件计数</div>
-                </div>
+            <div class="event-source" id="src-timer" onclick="triggerEvent('TIMER')">
+                <div class="event-icon">⏱️</div>
+                <div class="event-name">定时器</div>
+                <div class="event-desc">定时时间到</div>
+            </div>
+            <div class="event-source" id="src-adc" onclick="triggerEvent('ADC_DONE')">
+                <div class="event-icon">📊</div>
+                <div class="event-name">ADC 完成</div>
+                <div class="event-desc">转换完成</div>
             </div>
         </div>
         
-        <div class="card">
-            <h2>回调执行日志</h2>
-            <div class="log-container" id="eventLog">
-                <div class="log-entry event">等待事件触发...</div>
+        <div class="event-queue">
+            <div class="queue-header">
+                <span class="queue-title">事件队列</span>
+                <span class="queue-count" id="queueCount">0 个事件</span>
             </div>
+            <div class="queue-items" id="queueItems">
+                <span class="queue-empty">队列为空，点击上方事件源触发事件</span>
+            </div>
+        </div>
+        
+        <div class="handlers">
+            <div class="handlers-title">注册的事件处理器</div>
+            <div class="handler-list">
+                <div class="handler-item" id="handler-uart">
+                    <span class="handler-event">UART_RX</span>
+                    <span class="handler-name">onUartRxHandler</span>
+                </div>
+                <div class="handler-item" id="handler-timer">
+                    <span class="handler-event">TIMER</span>
+                    <span class="handler-name">onTimerHandler</span>
+                </div>
+                <div class="handler-item" id="handler-adc">
+                    <span class="handler-event">ADC_DONE</span>
+                    <span class="handler-name">onAdcDoneHandler</span>
+                </div>
+            </div>
+            
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">等待事件触发...</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="dispatchBtn" onclick="dispatchEvent()" disabled>处理下一个事件</button>
+            <button class="btn btn-primary" id="autoBtn" onclick="toggleAuto()">自动处理</button>
+            <button class="btn btn-secondary" onclick="clearQueue()">清空队列</button>
         </div>
     </div>
 
     <script>
-        const eventCallbacks = {};
-        let eventCount = 0;
+        let eventQueue = [];
+        let autoMode = false;
+        let autoInterval = null;
+        let eventId = 0;
         
-        function log(message, type = 'event') {
-            const container = document.getElementById('eventLog');
+        const eventHandlers = {
+            'UART_RX': 'handler-uart',
+            'TIMER': 'handler-timer',
+            'ADC_DONE': 'handler-adc'
+        };
+        
+        const eventSources = {
+            'UART_RX': 'src-uart',
+            'TIMER': 'src-timer',
+            'ADC_DONE': 'src-adc'
+        };
+        
+        function log(message, type = '') {
+            const container = document.getElementById('logContainer');
             const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            const timestamp = new Date().toLocaleTimeString();
-            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            entry.className = 'log-entry ' + type;
+            
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('zh-CN', { hour12: false });
+            
+            entry.innerHTML = `<span style="color:#999">[${timestamp}]</span> ${message}`;
             container.insertBefore(entry, container.firstChild);
+            
             while (container.children.length > 20) {
                 container.removeChild(container.lastChild);
             }
         }
         
-        function registerEventCallback(eventName, callback) {
-            eventCallbacks[eventName] = callback;
-            log(`注册事件回调: ${eventName}`, 'action');
-        }
-        
-        function triggerEvent(eventName) {
-            eventCount++;
-            document.getElementById('eventCount').textContent = eventCount;
+        function updateQueueDisplay() {
+            const items = document.getElementById('queueItems');
+            const count = document.getElementById('queueCount');
             
-            log(`事件触发: ${eventName}`, 'event');
+            count.textContent = eventQueue.length + ' 个事件';
             
-            if (eventCallbacks[eventName]) {
-                const data = eventCallbacks[eventName]();
-                log(`回调执行: 处理 ${eventName} 数据`, 'callback');
+            if (eventQueue.length === 0) {
+                items.innerHTML = '<span class="queue-empty">队列为空，点击上方事件源触发事件</span>';
+                document.getElementById('dispatchBtn').disabled = true;
             } else {
-                log(`事件 ${eventName} 无回调函数注册`, 'error');
+                items.innerHTML = eventQueue.map(e => 
+                    `<div class="queue-item">${e.type} #${e.id}</div>`
+                ).join('');
+                document.getElementById('dispatchBtn').disabled = autoMode;
             }
         }
         
-        registerEventCallback('temperature', () => {
-            const temp = (Math.random() * 10 + 20).toFixed(1);
-            document.getElementById('tempValue').textContent = temp;
-            log(`更新温度: ${temp}°C`, 'action');
-            return temp;
-        });
+        function triggerEvent(type) {
+            const srcId = eventSources[type];
+            const src = document.getElementById(srcId);
+            src.classList.add('active');
+            setTimeout(() => src.classList.remove('active'), 200);
+            
+            const event = {
+                id: ++eventId,
+                type: type,
+                timestamp: Date.now()
+            };
+            
+            eventQueue.push(event);
+            updateQueueDisplay();
+            
+            log(`事件产生: ${type} #${event.id}`);
+        }
         
-        registerEventCallback('humidity', () => {
-            const humid = (Math.random() * 20 + 40).toFixed(1);
-            document.getElementById('humidValue').textContent = humid;
-            log(`更新湿度: ${humid}%`, 'action');
-            return humid;
-        });
+        function dispatchEvent() {
+            if (eventQueue.length === 0) return;
+            
+            const event = eventQueue.shift();
+            updateQueueDisplay();
+            
+            log(`分发事件: ${event.type} #${event.id}`, 'dispatch');
+            
+            const handlerId = eventHandlers[event.type];
+            const handler = document.getElementById(handlerId);
+            handler.classList.add('active');
+            setTimeout(() => handler.classList.remove('active'), 300);
+            
+            const handlerName = handler.querySelector('.handler-name').textContent;
+            log(`执行处理器: ${handlerName}()`, 'handle');
+        }
         
-        registerEventCallback('pressure', () => {
-            const press = (Math.random() * 50 + 1000).toFixed(0);
-            document.getElementById('pressValue').textContent = press;
-            log(`更新气压: ${press} hPa`, 'action');
-            return press;
-        });
+        function toggleAuto() {
+            autoMode = !autoMode;
+            const btn = document.getElementById('autoBtn');
+            
+            if (autoMode) {
+                btn.textContent = '停止自动';
+                btn.classList.add('btn-primary');
+                btn.classList.remove('btn-secondary');
+                document.getElementById('dispatchBtn').disabled = true;
+                
+                autoInterval = setInterval(() => {
+                    if (eventQueue.length > 0) {
+                        dispatchEvent();
+                    }
+                }, 500);
+            } else {
+                btn.textContent = '自动处理';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                document.getElementById('dispatchBtn').disabled = eventQueue.length === 0;
+                
+                clearInterval(autoInterval);
+            }
+        }
         
-        registerEventCallback('error', () => {
-            log(`错误处理: 发送警报通知`, 'error');
-            return 'ERROR';
-        });
+        function clearQueue() {
+            eventQueue = [];
+            updateQueueDisplay();
+            log('队列已清空');
+        }
     </script>
 </body>
 </html>

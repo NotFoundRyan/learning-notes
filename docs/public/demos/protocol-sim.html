@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>设备通信模拟</title>
+    <title>通信协议演示</title>
     <style>
         * {
             margin: 0;
@@ -12,447 +12,397 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100%;
             padding: 20px;
-            color: #e0e0e0;
+            color: #333;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 900px;
             margin: 0 auto;
         }
         
-        h1 {
+        h2 {
             text-align: center;
-            color: #fff;
-            margin-bottom: 30px;
-            font-size: 2em;
-            font-weight: 300;
-            letter-spacing: 2px;
-        }
-        
-        .card {
-            background: rgba(50, 50, 55, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 24px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
         }
         
-        .card h2 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            font-weight: 400;
-        }
-        
-        .device-panel {
+        .simulator {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            align-items: start;
+            margin-bottom: 20px;
         }
         
-        @media (max-width: 900px) {
-            .device-panel {
+        @media (max-width: 768px) {
+            .simulator {
                 grid-template-columns: 1fr;
             }
         }
         
-        .device {
-            background: rgba(30, 30, 32, 0.8);
+        .node {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .device-header {
+        .node-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
         }
         
-        .device-icon {
+        .node-icon {
             width: 40px;
             height: 40px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: #333;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 20px;
+            color: white;
+            font-size: 18px;
         }
         
-        .device-name {
-            font-weight: 500;
+        .node-title {
             font-size: 16px;
-            color: #fff;
+            font-weight: 600;
         }
         
-        .device-log {
-            background: rgba(20, 20, 22, 0.9);
+        .node-subtitle {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .terminal {
+            background: #fafafa;
             border-radius: 8px;
-            padding: 15px;
-            min-height: 200px;
-            max-height: 300px;
+            padding: 12px;
+            min-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
-            font-family: 'Courier New', monospace;
+            font-family: 'Monaco', 'Consolas', monospace;
             font-size: 12px;
-            color: #aaa;
+            margin-bottom: 12px;
         }
         
-        .device-log .log-line {
-            margin-bottom: 5px;
-            padding: 3px 0;
+        .terminal-line {
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
         }
         
-        .device-log .log-line.tx { color: #ccc; }
-        .device-log .log-line.rx { color: #888; }
-        .device-log .log-line.error { color: #ff6b6b; }
-        .device-log .log-line.info { color: #666; }
+        .terminal-line:last-child {
+            border-bottom: none;
+        }
         
-        .connection {
+        .terminal-tx { color: #333; }
+        .terminal-rx { color: #666; }
+        .terminal-info { color: #999; font-style: italic; }
+        
+        .input-row {
             display: flex;
-            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-row input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .input-row input:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #333;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #555;
+        }
+        
+        .channel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .channel-title {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .channel-visual {
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 20px;
             padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
         }
         
-        .connection-line {
+        .channel-node {
             width: 60px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .connection-line.active::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-            animation: flowRight 1s linear infinite;
-        }
-        
-        @keyframes flowRight {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        .button-group {
+            height: 60px;
+            background: #333;
+            border-radius: 50%;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
         }
         
-        button {
-            padding: 10px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: 400;
+        .channel-line {
+            flex: 1;
+            height: 4px;
+            background: #ddd;
+            position: relative;
+            max-width: 200px;
         }
         
-        button:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.25);
+        .channel-packet {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #666;
+            border-radius: 50%;
+            top: -8px;
+            animation: movePacket 1s ease-in-out;
         }
         
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        @keyframes movePacket {
+            0% { left: 0; }
+            100% { left: calc(100% - 20px); }
         }
         
-        .stat-item {
-            background: rgba(30, 30, 32, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .protocol-info {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .stat-value {
-            font-size: 24px;
-            font-weight: 300;
-            color: #fff;
-        }
-        
-        .stat-label {
-            font-size: 11px;
+        .protocol-info h3 {
+            font-size: 14px;
             color: #666;
-            margin-top: 5px;
-        }
-        
-        .command-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .command-btn {
-            padding: 10px;
-            background: rgba(30, 30, 32, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        
-        .command-btn:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .command-btn .cmd-code {
-            font-family: 'Courier New', monospace;
+            margin-bottom: 12px;
             font-weight: 500;
-            color: #ccc;
         }
         
-        .command-btn .cmd-name {
-            font-size: 11px;
+        .frame-structure {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .frame-field {
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .frame-field.header { background: #333; color: white; }
+        .frame-field.data { background: #e8e8e8; }
+        .frame-field.crc { background: #888; color: white; }
+        
+        .frame-field-name {
+            font-size: 10px;
             color: #666;
-            margin-top: 3px;
+            margin-bottom: 4px;
+        }
+        
+        .frame-field.header .frame-field-name,
+        .frame-field.crc .frame-field-name {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .frame-field-value {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>设备通信模拟</h1>
+        <h2>通信协议演示</h2>
         
-        <div class="card">
-            <h2>设备通信模拟</h2>
-            <div class="device-panel">
-                <div class="device">
-                    <div class="device-header">
-                        <div class="device-icon">📱</div>
-                        <div class="device-name">客户端 (Client)</div>
-                    </div>
-                    <div class="command-list">
-                        <div class="command-btn" onclick="sendCommand(0x01)">
-                            <div class="cmd-code">0x01</div>
-                            <div class="cmd-name">读版本</div>
-                        </div>
-                        <div class="command-btn" onclick="sendCommand(0x02)">
-                            <div class="cmd-code">0x02</div>
-                            <div class="cmd-name">读状态</div>
-                        </div>
-                        <div class="command-btn" onclick="sendCommand(0x03)">
-                            <div class="cmd-code">0x03</div>
-                            <div class="cmd-name">设置配置</div>
-                        </div>
-                        <div class="command-btn" onclick="sendCommand(0x05)">
-                            <div class="cmd-code">0x05</div>
-                            <div class="cmd-name">读数据</div>
-                        </div>
-                    </div>
-                    <div class="device-log" id="clientLog">
-                        <div class="log-line info">客户端就绪</div>
+        <div class="simulator">
+            <div class="node">
+                <div class="node-header">
+                    <div class="node-icon">A</div>
+                    <div>
+                        <div class="node-title">节点 A</div>
+                        <div class="node-subtitle">主设备 (Master)</div>
                     </div>
                 </div>
-                
-                <div class="connection">
-                    <div class="connection-line" id="line1"></div>
-                    <div style="font-size: 12px; color: #666;">通信链路</div>
-                    <div class="connection-line" id="line2"></div>
+                <div class="terminal" id="terminalA">
+                    <div class="terminal-line terminal-info">等待发送数据...</div>
                 </div>
-                
-                <div class="device">
-                    <div class="device-header">
-                        <div class="device-icon">🖥️</div>
-                        <div class="device-name">服务器 (Server)</div>
-                    </div>
-                    <div style="padding: 10px; background: rgba(30, 30, 32, 0.8); border-radius: 8px; margin-bottom: 15px;">
-                        <div style="font-size: 12px; color: #666;">服务器状态: <span id="serverStatus" style="color: #aaa; font-weight: 500;">运行中</span></div>
-                    </div>
-                    <div class="device-log" id="serverLog">
-                        <div class="log-line info">服务器就绪</div>
-                    </div>
+                <div class="input-row">
+                    <input type="text" id="inputA" placeholder="输入要发送的数据" onkeypress="if(event.key==='Enter')sendFromA()">
+                    <button class="btn btn-primary" onclick="sendFromA()">发送</button>
                 </div>
             </div>
             
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="txCount">0</div>
-                    <div class="stat-label">发送帧数</div>
+            <div class="node">
+                <div class="node-header">
+                    <div class="node-icon">B</div>
+                    <div>
+                        <div class="node-title">节点 B</div>
+                        <div class="node-subtitle">从设备 (Slave)</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="rxCount">0</div>
-                    <div class="stat-label">接收帧数</div>
+                <div class="terminal" id="terminalB">
+                    <div class="terminal-line terminal-info">等待接收数据...</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="ackCount">0</div>
-                    <div class="stat-label">ACK 次数</div>
+                <div class="input-row">
+                    <input type="text" id="inputB" placeholder="输入要回复的数据" onkeypress="if(event.key==='Enter')sendFromB()">
+                    <button class="btn btn-primary" onclick="sendFromB()">回复</button>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="nackCount">0</div>
-                    <div class="stat-label">NACK 次数</div>
+            </div>
+        </div>
+        
+        <div class="channel">
+            <div class="channel-title">通信通道</div>
+            <div class="channel-visual">
+                <div class="channel-node">A</div>
+                <div class="channel-line" id="channelLine"></div>
+                <div class="channel-node">B</div>
+            </div>
+        </div>
+        
+        <div class="protocol-info">
+            <h3>数据帧结构</h3>
+            <div class="frame-structure" id="frameStructure">
+                <div class="frame-field header">
+                    <div class="frame-field-name">帧头</div>
+                    <div class="frame-field-value">0xAA</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="errorCount">0</div>
-                    <div class="stat-label">错误次数</div>
+                <div class="frame-field">
+                    <div class="frame-field-name">长度</div>
+                    <div class="frame-field-value" id="frameLen">--</div>
+                </div>
+                <div class="frame-field data">
+                    <div class="frame-field-name">数据</div>
+                    <div class="frame-field-value" id="frameData">--</div>
+                </div>
+                <div class="frame-field crc">
+                    <div class="frame-field-name">校验</div>
+                    <div class="frame-field-value" id="frameCrc">--</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let sequence = 0;
-        let txCount = 0;
-        let rxCount = 0;
-        let ackCount = 0;
-        let nackCount = 0;
-        let errorCount = 0;
+        let packetId = 0;
         
-        function log(deviceId, message, type = 'info') {
-            const logElement = document.getElementById(deviceId);
+        function log(terminalId, message, type = 'info') {
+            const terminal = document.getElementById(terminalId);
             const line = document.createElement('div');
-            line.className = `log-line ${type}`;
-            const timestamp = new Date().toLocaleTimeString();
-            line.textContent = `[${timestamp}] ${message}`;
-            logElement.appendChild(line);
-            logElement.scrollTop = logElement.scrollHeight;
+            line.className = 'terminal-line terminal-' + type;
             
-            while (logElement.children.length > 50) {
-                logElement.removeChild(logElement.firstChild);
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            line.textContent = `[${time}] ${message}`;
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            while (terminal.children.length > 20) {
+                terminal.removeChild(terminal.firstChild);
             }
         }
         
-        function activateLine(direction) {
-            const line = document.getElementById(direction === 'tx' ? 'line1' : 'line2');
-            line.classList.add('active');
-            setTimeout(() => line.classList.remove('active'), 1000);
+        function animatePacket() {
+            const line = document.getElementById('channelLine');
+            const packet = document.createElement('div');
+            packet.className = 'channel-packet';
+            line.appendChild(packet);
+            setTimeout(() => packet.remove(), 1000);
         }
         
-        function calculateCRC16(data) {
-            let crc = 0xFFFF;
-            for (let i = 0; i < data.length; i++) {
-                crc ^= data[i];
-                for (let j = 0; j < 8; j++) {
-                    if (crc & 0x0001) {
-                        crc = (crc >> 1) ^ 0xA001;
-                    } else {
-                        crc >>= 1;
-                    }
-                }
+        function calculateCRC(data) {
+            let sum = 0xAA;
+            for (const c of data) {
+                sum += c.charCodeAt(0);
             }
-            return crc;
+            return (sum & 0xFF).toString(16).toUpperCase().padStart(2, '0');
         }
         
-        function packFrame(command, data = []) {
-            const frame = [];
-            frame.push(0xAA, 0x55);
-            frame.push(data.length + 2);
-            frame.push(++sequence);
-            frame.push(command);
-            data.forEach(b => frame.push(b));
-            
-            const crc = calculateCRC16(frame.slice(3));
-            frame.push(crc & 0xFF, (crc >> 8) & 0xFF);
-            frame.push(0x0D);
-            
-            return frame;
+        function updateFrameDisplay(data) {
+            document.getElementById('frameLen').textContent = data.length.toString(16).toUpperCase().padStart(2, '0');
+            document.getElementById('frameData').textContent = data.substring(0, 8) + (data.length > 8 ? '...' : '');
+            document.getElementById('frameCrc').textContent = calculateCRC(data);
         }
         
-        async function sendCommand(command) {
-            const data = [];
-            if (command === 0x03) {
-                data.push(0x00, 0x01, 0x00, 0x64);
-            }
+        function sendFromA() {
+            const input = document.getElementById('inputA');
+            const data = input.value.trim();
+            if (!data) return;
             
-            const frame = packFrame(command, data);
-            const frameHex = frame.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+            const id = ++packetId;
+            log('terminalA', `TX: "${data}" (ID: ${id})`, 'tx');
+            updateFrameDisplay(data);
+            animatePacket();
             
-            log('clientLog', `TX: ${frameHex}`, 'tx');
-            activateLine('tx');
-            txCount++;
-            updateStats();
+            setTimeout(() => {
+                log('terminalB', `RX: "${data}" (ID: ${id})`, 'rx');
+            }, 500);
             
-            await delay(500);
-            
-            log('serverLog', `RX: ${frameHex}`, 'rx');
-            rxCount++;
-            updateStats();
-            
-            await delay(500);
-            
-            const response = processCommand(command, data);
-            log('serverLog', `处理命令 0x${command.toString(16).toUpperCase().padStart(2, '0')}`, 'info');
-            
-            await delay(500);
-            
-            const responseFrame = packFrame(response.command, response.data);
-            const responseHex = responseFrame.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
-            log('serverLog', `TX: ${responseHex}`, 'tx');
-            activateLine('rx');
-            txCount++;
-            updateStats();
-            
-            await delay(500);
-            
-            log('clientLog', `RX: ${responseHex}`, 'rx');
-            rxCount++;
-            
-            if (response.command === 0x80) {
-                log('clientLog', '收到 ACK', 'info');
-                ackCount++;
-            } else {
-                log('clientLog', '收到 NACK', 'error');
-                nackCount++;
-            }
-            
-            updateStats();
+            input.value = '';
         }
         
-        function processCommand(command, data) {
-            switch (command) {
-                case 0x01:
-                    return { command: 0x80, data: [0x01, 0x00, 0x00, 0x01] };
-                case 0x02:
-                    return { command: 0x80, data: [0x19, 0x28, 0x03, 0xE8, 0x64, 0x01] };
-                case 0x03:
-                    return { command: 0x80, data: [sequence] };
-                case 0x05:
-                    return { command: 0x80, data: [0x01, 0x02, 0x03, 0x04, 0x05] };
-                default:
-                    return { command: 0x81, data: [0x03] };
-            }
-        }
-        
-        function updateStats() {
-            document.getElementById('txCount').textContent = txCount;
-            document.getElementById('rxCount').textContent = rxCount;
-            document.getElementById('ackCount').textContent = ackCount;
-            document.getElementById('nackCount').textContent = nackCount;
-            document.getElementById('errorCount').textContent = errorCount;
-        }
-        
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+        function sendFromB() {
+            const input = document.getElementById('inputB');
+            const data = input.value.trim();
+            if (!data) return;
+            
+            const id = ++packetId;
+            log('terminalB', `TX: "${data}" (ID: ${id})`, 'tx');
+            updateFrameDisplay(data);
+            animatePacket();
+            
+            setTimeout(() => {
+                log('terminalA', `RX: "${data}" (ID: ${id})`, 'rx');
+            }, 500);
+            
+            input.value = '';
         }
     </script>
 </body>

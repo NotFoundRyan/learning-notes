@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UDP/TCP 协议对比</title>
+    <title>UDP/TCP 对比演示</title>
     <style>
         * {
             margin: 0;
@@ -12,41 +12,24 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
-            min-height: 100vh;
-            padding: 24px;
-            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100%;
+            padding: 20px;
+            color: #333;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         
-        h1 {
+        h2 {
             text-align: center;
-            color: #ffffff;
-            margin-bottom: 24px;
-            font-size: 1.8em;
-            font-weight: 400;
-        }
-        
-        .card {
-            background: rgba(50, 50, 55, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 24px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .card h2 {
-            color: #ffffff;
-            margin-bottom: 20px;
-            font-size: 1.2em;
-            font-weight: 500;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
         }
         
         .protocol-compare {
@@ -63,157 +46,263 @@
         }
         
         .protocol-card {
-            background: rgba(60, 60, 65, 0.8);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .protocol-card:hover {
-            background: rgba(70, 70, 75, 0.9);
-            border-color: rgba(255, 255, 255, 0.1);
+        .protocol-header {
+            text-align: center;
+            margin-bottom: 20px;
         }
         
-        .protocol-card h3 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            color: #ffffff;
+        .protocol-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
         
-        .protocol-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
+        .protocol-desc {
             font-size: 12px;
+            color: #666;
+        }
+        
+        .packet-flow {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 200px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+        
+        .endpoint {
+            position: absolute;
+            top: 10px;
+            padding: 6px 12px;
+            background: #333;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
         }
         
-        .feature-list {
-            list-style: none;
-            margin: 15px 0;
+        .endpoint.left { left: 10px; }
+        .endpoint.right { right: 10px; }
+        
+        .packet {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            animation: packetMove 1s ease forwards;
+            opacity: 0;
         }
         
-        .feature-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            align-items: center;
+        .packet.send {
+            background: #666;
+            color: white;
+        }
+        
+        .packet.ack {
+            background: #999;
+            color: white;
+        }
+        
+        .packet.lost {
+            background: #ccc;
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+        
+        @keyframes packetMove {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             font-size: 14px;
-            color: #b0b0b0;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
         
-        .feature-list li:last-child {
-            border-bottom: none;
+        .btn-primary {
+            background: #333;
+            color: white;
         }
         
-        .comparison-table {
+        .btn-primary:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background: #e8e8e8;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #ddd;
+        }
+        
+        .compare-table {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .compare-table h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            font-size: 13px;
         }
         
-        .comparison-table th,
-        .comparison-table td {
-            padding: 12px 15px;
+        th, td {
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid #eee;
         }
         
-        .comparison-table th {
-            background: rgba(255, 255, 255, 0.05);
+        th {
+            background: #fafafa;
             font-weight: 500;
-            color: #ffffff;
-        }
-        
-        .comparison-table tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        
-        .use-case-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .use-case-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .use-case-card {
-            background: rgba(60, 60, 65, 0.8);
-            border-radius: 12px;
-            padding: 15px;
-        }
-        
-        .use-case-card h4 {
-            margin-bottom: 10px;
-            color: #ffffff;
-            font-weight: 500;
-        }
-        
-        .use-case-card ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .use-case-card li {
-            padding: 5px 0;
-            font-size: 14px;
-            color: #888;
-        }
-        
-        .use-case-card li::before {
-            content: "•";
-            margin-right: 8px;
             color: #666;
+        }
+        
+        td:first-child {
+            font-weight: 500;
+        }
+        
+        .feature-yes {
+            color: #333;
+        }
+        
+        .feature-no {
+            color: #999;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>UDP vs TCP 协议对比</h1>
+        <h2>UDP/TCP 对比演示</h2>
         
-        <div class="card">
-            <h2>协议特性对比</h2>
-            <div class="protocol-compare">
-                <div class="protocol-card">
-                    <h3>
-                        <span class="protocol-badge">UDP</span>
-                        用户数据报协议
-                    </h3>
-                    <ul class="feature-list">
-                        <li>⚡ 无连接，快速传输</li>
-                        <li>📦 数据包独立，无序</li>
-                        <li>❌ 不保证可靠性</li>
-                        <li>📡 支持广播/组播</li>
-                        <li>💡 适用: 实时音视频、DNS</li>
-                    </ul>
+        <div class="controls">
+            <button class="btn btn-primary" onclick="sendPacket('udp')">发送 UDP 数据包</button>
+            <button class="btn btn-primary" onclick="sendPacket('tcp')">发送 TCP 数据包</button>
+            <button class="btn btn-secondary" onclick="simulateLoss()">模拟丢包</button>
+            <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+        </div>
+        
+        <div class="protocol-compare">
+            <div class="protocol-card">
+                <div class="protocol-header">
+                    <div class="protocol-name">UDP</div>
+                    <div class="protocol-desc">User Datagram Protocol - 无连接</div>
                 </div>
-                
-                <div class="protocol-card">
-                    <h3>
-                        <span class="protocol-badge">TCP</span>
-                        传输控制协议
-                    </h3>
-                    <ul class="feature-list">
-                        <li>🔗 面向连接，三次握手</li>
-                        <li>✅ 可靠传输，有序</li>
-                        <li>🔄 自动重传机制</li>
-                        <li>📊 流量/拥塞控制</li>
-                        <li>💡 适用: HTTP、文件传输</li>
-                    </ul>
+                <div class="packet-flow" id="udpFlow">
+                    <div class="endpoint left">发送端</div>
+                    <div class="endpoint right">接收端</div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="udpSent">0</div>
+                        <div class="stat-label">已发送</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="udpLost">0</div>
+                        <div class="stat-label">丢失</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="udpTime">0ms</div>
+                        <div class="stat-label">延迟</div>
+                    </div>
                 </div>
             </div>
             
-            <table class="comparison-table">
+            <div class="protocol-card">
+                <div class="protocol-header">
+                    <div class="protocol-name">TCP</div>
+                    <div class="protocol-desc">Transmission Control Protocol - 面向连接</div>
+                </div>
+                <div class="packet-flow" id="tcpFlow">
+                    <div class="endpoint left">发送端</div>
+                    <div class="endpoint right">接收端</div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="tcpSent">0</div>
+                        <div class="stat-label">已发送</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="tcpRetrans">0</div>
+                        <div class="stat-label">重传</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="tcpTime">0ms</div>
+                        <div class="stat-label">延迟</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="compare-table">
+            <h3>协议特性对比</h3>
+            <table>
                 <thead>
                     <tr>
                         <th>特性</th>
@@ -224,69 +313,160 @@
                 <tbody>
                     <tr>
                         <td>连接方式</td>
-                        <td>无连接</td>
-                        <td>面向连接</td>
+                        <td class="feature-no">无连接</td>
+                        <td class="feature-yes">面向连接</td>
                     </tr>
                     <tr>
                         <td>可靠性</td>
-                        <td>不保证送达</td>
-                        <td>保证送达</td>
+                        <td class="feature-no">不保证送达</td>
+                        <td class="feature-yes">保证送达</td>
                     </tr>
                     <tr>
                         <td>顺序保证</td>
-                        <td>可能乱序</td>
-                        <td>保证顺序</td>
+                        <td class="feature-no">无序</td>
+                        <td class="feature-yes">有序</td>
                     </tr>
                     <tr>
-                        <td>传输速度</td>
-                        <td>快</td>
-                        <td>相对慢</td>
+                        <td>流量控制</td>
+                        <td class="feature-no">无</td>
+                        <td class="feature-yes">有</td>
                     </tr>
                     <tr>
-                        <td>资源消耗</td>
-                        <td>低</td>
-                        <td>高</td>
+                        <td>开销</td>
+                        <td class="feature-yes">低</td>
+                        <td class="feature-no">高</td>
                     </tr>
                     <tr>
-                        <td>首部开销</td>
-                        <td>8 字节</td>
-                        <td>20 字节</td>
-                    </tr>
-                    <tr>
-                        <td>广播/组播</td>
-                        <td>支持</td>
-                        <td>不支持</td>
+                        <td>适用场景</td>
+                        <td>实时音视频、DNS</td>
+                        <td>文件传输、网页浏览</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        
-        <div class="card">
-            <h2>应用场景选择</h2>
-            <div class="use-case-grid">
-                <div class="use-case-card">
-                    <h4>⚡ UDP 适用场景</h4>
-                    <ul>
-                        <li>实时音视频通话</li>
-                        <li>在线游戏</li>
-                        <li>DNS 查询</li>
-                        <li>局域网设备发现</li>
-                        <li>传感器数据上报</li>
-                    </ul>
-                </div>
-                
-                <div class="use-case-card">
-                    <h4>✅ TCP 适用场景</h4>
-                    <ul>
-                        <li>网页浏览 (HTTP)</li>
-                        <li>文件传输 (FTP)</li>
-                        <li>邮件发送 (SMTP)</li>
-                        <li>远程登录 (SSH)</li>
-                        <li>数据库连接</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
     </div>
+
+    <script>
+        let udpStats = { sent: 0, lost: 0 };
+        let tcpStats = { sent: 0, retrans: 0 };
+        let simulateLossNext = false;
+        let packetId = 0;
+        
+        function sendPacket(protocol) {
+            const id = ++packetId;
+            const flow = document.getElementById(protocol + 'Flow');
+            const height = flow.offsetHeight;
+            
+            if (protocol === 'udp') {
+                sendUDP(flow, id, height);
+            } else {
+                sendTCP(flow, id, height);
+            }
+        }
+        
+        function sendUDP(flow, id, height) {
+            const packet = createPacket('DATA-' + id, 'send');
+            const topPos = 40 + (udpStats.sent % 5) * 30;
+            packet.style.top = topPos + 'px';
+            flow.appendChild(packet);
+            
+            udpStats.sent++;
+            document.getElementById('udpSent').textContent = udpStats.sent;
+            
+            if (simulateLossNext) {
+                packet.classList.add('lost');
+                udpStats.lost++;
+                document.getElementById('udpLost').textContent = udpStats.lost;
+                simulateLossNext = false;
+            }
+            
+            document.getElementById('udpTime').textContent = '~10ms';
+            
+            setTimeout(() => packet.remove(), 2000);
+        }
+        
+        function sendTCP(flow, id, height) {
+            const syn = createPacket('SYN', 'send');
+            syn.style.top = '40px';
+            flow.appendChild(syn);
+            
+            setTimeout(() => {
+                const synAck = createPacket('SYN-ACK', 'ack');
+                synAck.style.top = '70px';
+                flow.appendChild(synAck);
+                
+                setTimeout(() => {
+                    const ack = createPacket('ACK', 'send');
+                    ack.style.top = '100px';
+                    flow.appendChild(ack);
+                    
+                    setTimeout(() => {
+                        const data = createPacket('DATA-' + id, 'send');
+                        data.style.top = '130px';
+                        flow.appendChild(data);
+                        
+                        tcpStats.sent++;
+                        document.getElementById('tcpSent').textContent = tcpStats.sent;
+                        
+                        if (simulateLossNext) {
+                            data.classList.add('lost');
+                            setTimeout(() => {
+                                const retrans = createPacket('DATA-' + id + '(R)', 'send');
+                                retrans.style.top = '160px';
+                                flow.appendChild(retrans);
+                                tcpStats.retrans++;
+                                document.getElementById('tcpRetrans').textContent = tcpStats.retrans;
+                                setTimeout(() => retrans.remove(), 2000);
+                            }, 500);
+                            simulateLossNext = false;
+                        }
+                        
+                        setTimeout(() => {
+                            const dataAck = createPacket('ACK', 'ack');
+                            dataAck.style.top = '160px';
+                            flow.appendChild(dataAck);
+                            setTimeout(() => dataAck.remove(), 2000);
+                        }, 300);
+                        
+                        document.getElementById('tcpTime').textContent = '~50ms';
+                        setTimeout(() => data.remove(), 2000);
+                    }, 300);
+                    setTimeout(() => ack.remove(), 2000);
+                }, 300);
+                setTimeout(() => synAck.remove(), 2000);
+            }, 300);
+            setTimeout(() => syn.remove(), 2000);
+        }
+        
+        function createPacket(text, type) {
+            const packet = document.createElement('div');
+            packet.className = 'packet ' + type;
+            packet.textContent = text;
+            return packet;
+        }
+        
+        function simulateLoss() {
+            simulateLossNext = true;
+        }
+        
+        function clearAll() {
+            document.getElementById('udpFlow').innerHTML = `
+                <div class="endpoint left">发送端</div>
+                <div class="endpoint right">接收端</div>
+            `;
+            document.getElementById('tcpFlow').innerHTML = `
+                <div class="endpoint left">发送端</div>
+                <div class="endpoint right">接收端</div>
+            `;
+            udpStats = { sent: 0, lost: 0 };
+            tcpStats = { sent: 0, retrans: 0 };
+            document.getElementById('udpSent').textContent = '0';
+            document.getElementById('udpLost').textContent = '0';
+            document.getElementById('udpTime').textContent = '0ms';
+            document.getElementById('tcpSent').textContent = '0';
+            document.getElementById('tcpRetrans').textContent = '0';
+            document.getElementById('tcpTime').textContent = '0ms';
+        }
+    </script>
 </body>
 </html>

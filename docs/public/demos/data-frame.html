@@ -10,286 +10,434 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100%;
             padding: 20px;
-            color: #e0e0e0;
+            color: #333;
         }
-
+        
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
-
-        h1 {
+        
+        h2 {
             text-align: center;
-            color: #fff;
-            margin-bottom: 30px;
-            font-size: 2em;
-            font-weight: 300;
-            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
         }
-
+        
         .card {
-            background: rgba(50, 50, 55, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-
-        .card h2 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            font-weight: 400;
+        
+        .card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            font-weight: 500;
         }
-
-        .frame-visualizer {
-            display: flex;
-            align-items: stretch;
-            gap: 2px;
-            margin: 20px 0;
-            background: rgba(30, 30, 32, 0.8);
+        
+        .frame-visual {
+            background: #fafafa;
+            border-radius: 8px;
             padding: 20px;
-            border-radius: 12px;
-            overflow-x: auto;
+            margin-bottom: 16px;
         }
-
-        .frame-field {
+        
+        .frame-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .frame-label {
+            width: 80px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+        
+        .frame-bytes {
+            display: flex;
+            flex: 1;
+            gap: 4px;
+        }
+        
+        .byte-cell {
+            flex: 1;
+            min-width: 40px;
+            height: 50px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 15px 10px;
-            border-radius: 8px;
-            min-width: 60px;
-            text-align: center;
-            transition: all 0.3s ease;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            transition: all 0.2s ease;
         }
-
-        .frame-field:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        
+        .byte-cell:hover {
+            border-color: #999;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-
-        .frame-field.header { background: rgba(255, 255, 255, 0.25); color: white; }
-        .frame-field.length { background: rgba(180, 180, 180, 0.25); color: white; }
-        .frame-field.cmd { background: rgba(120, 120, 120, 0.3); color: white; }
-        .frame-field.data { background: rgba(80, 80, 80, 0.35); color: white; flex: 1; }
-        .frame-field.crc { background: rgba(60, 60, 60, 0.4); color: white; }
-        .frame-field.tail { background: rgba(40, 40, 40, 0.45); color: white; }
-
-        .frame-field .value {
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            font-weight: 500;
-            margin-top: 5px;
+        
+        .byte-cell.header { background: #333; color: white; border-color: #333; }
+        .byte-cell.type { background: #666; color: white; border-color: #666; }
+        .byte-cell.length { background: #888; color: white; border-color: #888; }
+        .byte-cell.data { background: #e8e8e8; border-color: #ccc; }
+        .byte-cell.crc { background: #aaa; color: white; border-color: #aaa; }
+        .byte-cell.tail { background: #333; color: white; border-color: #333; }
+        
+        .byte-value {
+            font-size: 14px;
+            font-weight: 600;
         }
-
-        .frame-field .label {
-            font-size: 11px;
-            opacity: 0.9;
-        }
-
-        .frame-field .size {
+        
+        .byte-name {
             font-size: 10px;
-            opacity: 0.7;
-            margin-top: 3px;
+            opacity: 0.8;
+            margin-top: 2px;
         }
-
-        .stats {
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-color.header { background: #333; }
+        .legend-color.type { background: #666; }
+        .legend-color.length { background: #888; }
+        .legend-color.data { background: #e8e8e8; border: 1px solid #ccc; }
+        .legend-color.crc { background: #aaa; }
+        
+        .config-panel {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
-
-        .stat-item {
-            background: rgba(30, 30, 32, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 300;
-            color: #fff;
-        }
-
-        .stat-label {
-            font-size: 12px;
+        
+        .config-item label {
+            font-size: 11px;
             color: #666;
-            margin-top: 5px;
         }
-
-        .field-table {
+        
+        .config-item select,
+        .config-item input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            color: #333;
+        }
+        
+        .config-item select:focus,
+        .config-item input:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            font-size: 13px;
         }
-
-        .field-table th,
-        .field-table td {
-            padding: 12px 15px;
+        
+        .info-table th,
+        .info-table td {
+            padding: 10px 12px;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #eee;
         }
-
-        .field-table th {
-            background: rgba(30, 30, 32, 0.8);
+        
+        .info-table th {
+            background: #fafafa;
             font-weight: 500;
-            color: #fff;
+            color: #666;
         }
-
-        .field-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .field-color {
-            width: 20px;
-            height: 20px;
+        
+        .info-table code {
+            background: #f0f0f0;
+            padding: 2px 6px;
             border-radius: 4px;
-            display: inline-block;
-            margin-right: 8px;
-            vertical-align: middle;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
         }
-
-        .info-box {
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 3px solid rgba(255, 255, 255, 0.3);
-            padding: 15px;
-            border-radius: 0 8px 8px 0;
-            margin-top: 20px;
-        }
-
-        .info-box h4 {
-            color: #fff;
-            margin-bottom: 10px;
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
             font-weight: 500;
+            background: #333;
+            color: white;
+            transition: all 0.2s ease;
         }
-
-        .info-box ul {
-            margin-left: 20px;
-        }
-
-        .info-box li {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #888;
+        
+        .btn:hover {
+            background: #555;
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>帧结构可视化</h1>
-
+        <h2>帧结构可视化</h2>
+        
         <div class="card">
-            <h2>协议帧结构</h2>
-            <div class="frame-visualizer" id="frameVisualizer">
-                <div class="frame-field header">
-                    <div class="label">Header</div>
-                    <div class="value">AA 55</div>
-                    <div class="size">2 bytes</div>
+            <h3>数据帧结构</h3>
+            <div class="frame-visual">
+                <div class="frame-row">
+                    <div class="frame-label">字节偏移</div>
+                    <div class="frame-bytes" id="offsetRow"></div>
                 </div>
-                <div class="frame-field length">
-                    <div class="label">Length</div>
-                    <div class="value">N+2</div>
-                    <div class="size">1 byte</div>
-                </div>
-                <div class="frame-field cmd">
-                    <div class="label">Command</div>
-                    <div class="value">XX</div>
-                    <div class="size">1 byte</div>
-                </div>
-                <div class="frame-field data">
-                    <div class="label">Data</div>
-                    <div class="value">...</div>
-                    <div class="size">N bytes</div>
-                </div>
-                <div class="frame-field crc">
-                    <div class="label">CRC</div>
-                    <div class="value">XXXX</div>
-                    <div class="size">2 bytes</div>
-                </div>
-                <div class="frame-field tail">
-                    <div class="label">Tail</div>
-                    <div class="value">0D</div>
-                    <div class="size">1 byte</div>
+                <div class="frame-row">
+                    <div class="frame-label">帧内容</div>
+                    <div class="frame-bytes" id="frameContent"></div>
                 </div>
             </div>
-
-            <table class="field-table">
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color header"></div>
+                    <span>帧头</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color type"></div>
+                    <span>类型</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color length"></div>
+                    <span>长度</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color data"></div>
+                    <span>数据</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color crc"></div>
+                    <span>校验</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>帧配置</h3>
+            <div class="config-panel">
+                <div class="config-item">
+                    <label>帧头</label>
+                    <select id="headerSelect" onchange="updateFrame()">
+                        <option value="0xAA">0xAA</option>
+                        <option value="0x55">0x55</option>
+                        <option value="0x7E">0x7E</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>帧类型</label>
+                    <select id="typeSelect" onchange="updateFrame()">
+                        <option value="0x01">0x01 - 数据帧</option>
+                        <option value="0x02">0x02 - 命令帧</option>
+                        <option value="0x03">0x03 - 应答帧</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>数据长度</label>
+                    <select id="lengthSelect" onchange="updateFrame()">
+                        <option value="4">4 字节</option>
+                        <option value="8">8 字节</option>
+                        <option value="16">16 字节</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>校验方式</label>
+                    <select id="crcSelect" onchange="updateFrame()">
+                        <option value="sum">累加和</option>
+                        <option value="xor">异或</option>
+                        <option value="crc8">CRC-8</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn" onclick="randomData()">生成随机数据</button>
+        </div>
+        
+        <div class="card">
+            <h3>帧结构说明</h3>
+            <table class="info-table">
                 <thead>
                     <tr>
                         <th>字段</th>
-                        <th>大小</th>
-                        <th>作用</th>
+                        <th>长度</th>
                         <th>说明</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="field-color" style="background: rgba(255, 255, 255, 0.25);"></span>Header</td>
-                        <td>2 bytes</td>
-                        <td>帧同步</td>
-                        <td>固定值 0xAA 0x55，用于识别帧开始</td>
+                        <td>帧头</td>
+                        <td><code>1 字节</code></td>
+                        <td>固定值，用于帧同步</td>
                     </tr>
                     <tr>
-                        <td><span class="field-color" style="background: rgba(180, 180, 180, 0.25);"></span>Length</td>
-                        <td>1 byte</td>
-                        <td>数据长度</td>
-                        <td>命令 + 数据的总长度</td>
+                        <td>类型</td>
+                        <td><code>1 字节</code></td>
+                        <td>标识帧的用途</td>
                     </tr>
                     <tr>
-                        <td><span class="field-color" style="background: rgba(120, 120, 120, 0.3);"></span>Command</td>
-                        <td>1 byte</td>
-                        <td>命令码</td>
-                        <td>标识帧类型和操作</td>
+                        <td>长度</td>
+                        <td><code>1 字节</code></td>
+                        <td>数据字段的长度</td>
                     </tr>
                     <tr>
-                        <td><span class="field-color" style="background: rgba(80, 80, 80, 0.35);"></span>Data</td>
-                        <td>0~N bytes</td>
-                        <td>数据区</td>
+                        <td>数据</td>
+                        <td><code>N 字节</code></td>
                         <td>实际传输的数据内容</td>
                     </tr>
                     <tr>
-                        <td><span class="field-color" style="background: rgba(60, 60, 60, 0.4);"></span>CRC</td>
-                        <td>2 bytes</td>
-                        <td>校验码</td>
-                        <td>CRC16 校验，检测传输错误</td>
-                    </tr>
-                    <tr>
-                        <td><span class="field-color" style="background: rgba(40, 40, 40, 0.45);"></span>Tail</td>
-                        <td>1 byte</td>
-                        <td>帧结束</td>
-                        <td>固定值 0x0D，可选字段</td>
+                        <td>校验</td>
+                        <td><code>1 字节</code></td>
+                        <td>用于错误检测</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <div class="card">
-            <h2>帧结构设计原则</h2>
-            <div class="info-box">
-                <h4>设计要点</h4>
-                <ul>
-                    <li><strong>帧头选择</strong>：使用特殊字节序列，避免与数据冲突</li>
-                    <li><strong>长度字段</strong>：支持变长数据，提高灵活性</li>
-                    <li><strong>命令码</strong>：按功能分类，预留扩展空间</li>
-                    <li><strong>CRC 校验</strong>：保证数据完整性，推荐 CRC16</li>
-                    <li><strong>帧尾可选</strong>：调试阶段建议保留，发布可去掉</li>
-                </ul>
-            </div>
-        </div>
     </div>
+
+    <script>
+        let dataBytes = [0x12, 0x34, 0x56, 0x78];
+        
+        function updateFrame() {
+            const header = parseInt(document.getElementById('headerSelect').value);
+            const type = parseInt(document.getElementById('typeSelect').value);
+            const length = parseInt(document.getElementById('lengthSelect').value);
+            const crcType = document.getElementById('crcSelect').value;
+            
+            while (dataBytes.length < length) {
+                dataBytes.push(Math.floor(Math.random() * 256));
+            }
+            dataBytes = dataBytes.slice(0, length);
+            
+            const offsetRow = document.getElementById('offsetRow');
+            const frameContent = document.getElementById('frameContent');
+            
+            offsetRow.innerHTML = '';
+            frameContent.innerHTML = '';
+            
+            let offset = 0;
+            
+            const headerCell = createByteCell(header.toString(16).toUpperCase().padStart(2, '0'), 'header', 'HEAD');
+            const offsetCell0 = createOffsetCell(offset++);
+            offsetRow.appendChild(offsetCell0);
+            frameContent.appendChild(headerCell);
+            
+            const typeCell = createByteCell(type.toString(16).toUpperCase().padStart(2, '0'), 'type', 'TYPE');
+            const offsetCell1 = createOffsetCell(offset++);
+            offsetRow.appendChild(offsetCell1);
+            frameContent.appendChild(typeCell);
+            
+            const lengthCell = createByteCell(length.toString(16).toUpperCase().padStart(2, '0'), 'length', 'LEN');
+            const offsetCell2 = createOffsetCell(offset++);
+            offsetRow.appendChild(offsetCell2);
+            frameContent.appendChild(lengthCell);
+            
+            for (let i = 0; i < length; i++) {
+                const dataCell = createByteCell(dataBytes[i].toString(16).toUpperCase().padStart(2, '0'), 'data', 'D' + i);
+                const offsetCell = createOffsetCell(offset++);
+                offsetRow.appendChild(offsetCell);
+                frameContent.appendChild(dataCell);
+            }
+            
+            const crc = calculateCRC(header, type, length, dataBytes, crcType);
+            const crcCell = createByteCell(crc.toString(16).toUpperCase().padStart(2, '0'), 'crc', 'CRC');
+            const offsetCell3 = createOffsetCell(offset);
+            offsetRow.appendChild(offsetCell3);
+            frameContent.appendChild(crcCell);
+        }
+        
+        function createByteCell(value, type, name) {
+            const cell = document.createElement('div');
+            cell.className = 'byte-cell ' + type;
+            cell.innerHTML = `
+                <span class="byte-value">${value}</span>
+                <span class="byte-name">${name}</span>
+            `;
+            return cell;
+        }
+        
+        function createOffsetCell(offset) {
+            const cell = document.createElement('div');
+            cell.className = 'byte-cell';
+            cell.style.background = 'transparent';
+            cell.style.border = 'none';
+            cell.innerHTML = `<span class="byte-value" style="font-size:11px;color:#999">${offset}</span>`;
+            return cell;
+        }
+        
+        function calculateCRC(header, type, length, data, crcType) {
+            let sum = header + type + length;
+            for (const b of data) {
+                sum += b;
+            }
+            
+            if (crcType === 'sum') {
+                return sum & 0xFF;
+            } else if (crcType === 'xor') {
+                let xor = header ^ type ^ length;
+                for (const b of data) {
+                    xor ^= b;
+                }
+                return xor;
+            } else {
+                return sum & 0xFF;
+            }
+        }
+        
+        function randomData() {
+            const length = parseInt(document.getElementById('lengthSelect').value);
+            dataBytes = [];
+            for (let i = 0; i < length; i++) {
+                dataBytes.push(Math.floor(Math.random() * 256));
+            }
+            updateFrame();
+        }
+        
+        updateFrame();
+    </script>
 </body>
 </html>

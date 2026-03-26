@@ -12,38 +12,47 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
             min-height: 100%;
             padding: 20px;
-            color: #e0e0e0;
+            color: #333;
         }
         
         .container {
-            max-width: 560px;
+            max-width: 700px;
             margin: 0 auto;
         }
         
         h2 {
             text-align: center;
-            margin-bottom: 16px;
-            color: #4fc3f7;
-            font-size: 16px;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
         }
         
-        .demo-area {
-            background: rgba(45, 55, 72, 0.6);
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            color: #666;
             margin-bottom: 16px;
+            font-weight: 500;
         }
         
         .input-row {
             display: flex;
             gap: 12px;
             align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
         
         .input-group {
@@ -53,97 +62,88 @@
         }
         
         .input-group label {
-            font-size: 12px;
-            color: #a0aec0;
+            font-size: 11px;
+            color: #666;
         }
         
-        .input-group input, .input-group select {
-            padding: 8px 12px;
-            border: 1px solid #4a5568;
+        .input-group input,
+        .input-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            background: #2d3748;
-            color: #e0e0e0;
             font-size: 14px;
-            width: 100px;
+            width: 120px;
+            background: white;
         }
         
-        .btn {
-            padding: 10px 20px;
-            border: none;
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .method-box {
+            background: #fafafa;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            background: linear-gradient(135deg, #4fc3f7, #0288d1);
-            color: white;
-            transition: all 0.2s ease;
-            margin-top: auto;
+            padding: 20px;
+            text-align: center;
         }
         
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
-        }
-        
-        .result-box {
-            background: #1a202c;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-        
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #2d3748;
-        }
-        
-        .result-row:last-child {
-            border-bottom: none;
-        }
-        
-        .result-label {
-            font-size: 14px;
-            color: #a0aec0;
-        }
-        
-        .result-value {
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .result-value.mod { color: #f56565; }
-        .result-value.and { color: #48bb78; }
-        .result-value.equal { color: #4fc3f7; }
-        
-        .binary-display {
-            background: #1a202c;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-        
-        .binary-title {
+        .method-title {
             font-size: 12px;
-            color: #a0aec0;
+            color: #666;
             margin-bottom: 12px;
+        }
+        
+        .method-expression {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+        }
+        
+        .method-result {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .method-result.correct {
+            color: #333;
+        }
+        
+        .method-result.incorrect {
+            color: #999;
+            text-decoration: line-through;
+        }
+        
+        .binary-visual {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
         
         .binary-row {
             display: flex;
             align-items: center;
-            gap: 8px;
             margin-bottom: 8px;
             font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
         }
         
         .binary-label {
-            width: 60px;
-            font-size: 12px;
-            color: #a0aec0;
+            width: 80px;
+            color: #666;
         }
         
         .binary-bits {
@@ -157,214 +157,217 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            background: #e8e8e8;
             border-radius: 3px;
-            background: #2d3748;
-            color: #a0aec0;
+            font-size: 12px;
         }
         
         .bit.highlight {
-            background: #4fc3f7;
-            color: #1a202c;
+            background: #333;
+            color: white;
         }
         
-        .bit.result {
-            background: #48bb78;
-            color: #1a202c;
+        .bit.masked {
+            background: #ccc;
+            color: #999;
         }
         
-        .operator {
-            font-size: 18px;
-            color: #4fc3f7;
-            margin: 0 8px;
+        .info-box {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
         }
         
-        .explanation {
-            background: rgba(79, 195, 247, 0.1);
-            border-left: 3px solid #4fc3f7;
-            padding: 12px 16px;
-            margin-top: 16px;
-            border-radius: 0 8px 8px 0;
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
             font-size: 13px;
-            line-height: 1.6;
         }
         
-        .size-options {
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #666;
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+        
+        .size-selector {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
+            margin-bottom: 16px;
         }
         
-        .size-btn {
-            padding: 6px 12px;
-            border: 1px solid #4a5568;
-            border-radius: 4px;
-            background: transparent;
-            color: #a0aec0;
+        .size-option {
+            padding: 8px 16px;
+            background: #e8e8e8;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
+            font-size: 13px;
+            transition: all 0.2s ease;
         }
         
-        .size-btn:hover, .size-btn.active {
-            background: #4fc3f7;
-            border-color: #4fc3f7;
-            color: #1a202c;
+        .size-option:hover {
+            background: #ddd;
+        }
+        
+        .size-option.active {
+            background: #333;
+            color: white;
+        }
+        
+        .note {
+            font-size: 12px;
+            color: #666;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #999;
+            margin-top: 16px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>位运算 vs 取模运算</h2>
+        <h2>位运算取模演示</h2>
         
-        <div class="demo-area">
-            <div class="input-row">
-                <div class="input-group">
-                    <label>数值 x</label>
-                    <input type="number" id="valueX" value="17" min="0">
-                </div>
-                <div class="input-group">
-                    <label>缓冲区大小 SIZE</label>
-                    <input type="number" id="sizeValue" value="8" min="1">
-                </div>
-                <button class="btn" onclick="calculate()">计算</button>
+        <div class="card">
+            <h3>缓冲区大小选择</h3>
+            <div class="size-selector">
+                <div class="size-option active" onclick="setSize(8)" id="size8">8 (2³)</div>
+                <div class="size-option" onclick="setSize(16)" id="size16">16 (2⁴)</div>
+                <div class="size-option" onclick="setSize(32)" id="size32">32 (2⁵)</div>
+                <div class="size-option" onclick="setSize(64)" id="size64">64 (2⁶)</div>
             </div>
             
-            <div class="size-options">
-                <span style="font-size: 12px; color: #a0aec0;">常用大小：</span>
-                <button class="size-btn" onclick="setSize(8)">8</button>
-                <button class="size-btn" onclick="setSize(16)">16</button>
-                <button class="size-btn" onclick="setSize(32)">32</button>
-                <button class="size-btn" onclick="setSize(64)">64</button>
-                <button class="size-btn" onclick="setSize(128)">128</button>
-                <button class="size-btn" onclick="setSize(256)">256</button>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>输入值 (index)</label>
+                    <input type="number" id="inputValue" value="17" min="0" oninput="calculate()">
+                </div>
+            </div>
+            
+            <div class="comparison">
+                <div class="method-box">
+                    <div class="method-title">传统取模运算</div>
+                    <div class="method-expression" id="modExpr">17 % 8</div>
+                    <div class="method-result" id="modResult">1</div>
+                </div>
+                <div class="method-box">
+                    <div class="method-title">位运算取模</div>
+                    <div class="method-expression" id="bitExpr">17 & 7</div>
+                    <div class="method-result" id="bitResult">1</div>
+                </div>
             </div>
         </div>
         
-        <div class="result-box">
-            <div class="result-row">
-                <span class="result-label">x % SIZE</span>
-                <span class="result-value mod" id="modResult">-</span>
-            </div>
-            <div class="result-row">
-                <span class="result-label">x & (SIZE - 1)</span>
-                <span class="result-value and" id="andResult">-</span>
-            </div>
-            <div class="result-row">
-                <span class="result-label">结果相等？</span>
-                <span class="result-value equal" id="equalResult">-</span>
-            </div>
-        </div>
-        
-        <div class="binary-display">
-            <div class="binary-title">二进制运算过程</div>
-            <div id="binaryCalc">
+        <div class="card">
+            <h3>二进制可视化</h3>
+            <div class="binary-visual">
                 <div class="binary-row">
-                    <span class="binary-label">x =</span>
-                    <div class="binary-bits" id="bitsX"></div>
-                    <span id="decX" style="margin-left: 8px; color: #a0aec0;"></span>
+                    <span class="binary-label">输入值</span>
+                    <div class="binary-bits" id="inputBits"></div>
+                    <span style="margin-left: 10px; color: #666;" id="inputDec">= 17</span>
                 </div>
                 <div class="binary-row">
-                    <span class="binary-label">SIZE - 1 =</span>
-                    <div class="binary-bits" id="bitsMask"></div>
-                    <span id="decMask" style="margin-left: 8px; color: #a0aec0;"></span>
+                    <span class="binary-label">掩码值</span>
+                    <div class="binary-bits" id="maskBits"></div>
+                    <span style="margin-left: 10px; color: #666;" id="maskDec">= 7</span>
                 </div>
-                <div class="binary-row" style="margin-top: 8px;">
-                    <span class="binary-label">x & mask =</span>
-                    <div class="binary-bits" id="bitsResult"></div>
-                    <span id="decResult" style="margin-left: 8px; color: #48bb78; font-weight: bold;"></span>
+                <div class="binary-row" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd;">
+                    <span class="binary-label">结果</span>
+                    <div class="binary-bits" id="resultBits"></div>
+                    <span style="margin-left: 10px; color: #333; font-weight: 500;" id="resultDec">= 1</span>
                 </div>
             </div>
         </div>
         
-        <div class="explanation" id="explanation">
-            当 SIZE 是 2 的幂次方时，SIZE-1 的二进制形式是低位全 1（如 8-1=7=0b0111）。
-            与运算会保留 x 的低位，丢弃高位，效果等同于取模。
+        <div class="card">
+            <h3>原理说明</h3>
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">缓冲区大小</span>
+                    <span class="info-value" id="bufferSize">8</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">掩码值 (size - 1)</span>
+                    <span class="info-value" id="maskValue">7</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">二进制掩码</span>
+                    <span class="info-value" id="maskBinary">0b111</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">等价关系</span>
+                    <span class="info-value">index % size ≡ index & (size - 1)</span>
+                </div>
+            </div>
+            
+            <div class="note">
+                <strong>适用条件：</strong>缓冲区大小必须是 2 的幂次方 (2, 4, 8, 16, 32...)。<br>
+                <strong>性能优势：</strong>位运算比除法/取模运算快 3-10 倍。
+            </div>
         </div>
     </div>
 
     <script>
-        function toBinary(num, bits = 8) {
-            return num.toString(2).padStart(bits, '0').split('');
-        }
-        
-        function renderBits(containerId, bits, highlightBits = []) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            bits.forEach((bit, i) => {
-                const bitEl = document.createElement('span');
-                bitEl.className = 'bit';
-                if (highlightBits.includes(i)) {
-                    bitEl.className += ' highlight';
-                }
-                bitEl.textContent = bit;
-                container.appendChild(bitEl);
-            });
-        }
-        
-        function renderResultBits(containerId, bits, resultBits) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            bits.forEach((bit, i) => {
-                const bitEl = document.createElement('span');
-                bitEl.className = 'bit';
-                if (bit === '1') {
-                    bitEl.className += ' result';
-                }
-                bitEl.textContent = bit;
-                container.appendChild(bitEl);
-            });
-        }
-        
-        function isPowerOfTwo(n) {
-            return n > 0 && (n & (n - 1)) === 0;
-        }
+        let bufferSize = 8;
         
         function setSize(size) {
-            document.getElementById('sizeValue').value = size;
-            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            bufferSize = size;
+            document.querySelectorAll('.size-option').forEach(el => el.classList.remove('active'));
+            document.getElementById('size' + size).classList.add('active');
             calculate();
         }
         
         function calculate() {
-            const x = parseInt(document.getElementById('valueX').value) || 0;
-            const size = parseInt(document.getElementById('sizeValue').value) || 1;
+            const input = parseInt(document.getElementById('inputValue').value) || 0;
+            const mask = bufferSize - 1;
             
-            const modResult = x % size;
-            const andResult = x & (size - 1);
-            const isEqual = modResult === andResult;
+            const modResult = input % bufferSize;
+            const bitResult = input & mask;
             
+            document.getElementById('modExpr').textContent = `${input} % ${bufferSize}`;
             document.getElementById('modResult').textContent = modResult;
-            document.getElementById('andResult').textContent = andResult;
-            document.getElementById('equalResult').textContent = isEqual ? '✓ 相等' : '✗ 不相等';
-            document.getElementById('equalResult').style.color = isEqual ? '#48bb78' : '#f56565';
+            document.getElementById('modResult').className = 'method-result correct';
             
-            const bits = Math.max(8, Math.ceil(Math.log2(Math.max(x, size) + 1)));
-            const xBits = toBinary(x, bits);
-            const maskBits = toBinary(size - 1, bits);
-            const resultBits = toBinary(andResult, bits);
+            document.getElementById('bitExpr').textContent = `${input} & ${mask}`;
+            document.getElementById('bitResult').textContent = bitResult;
+            document.getElementById('bitResult').className = 'method-result ' + (modResult === bitResult ? 'correct' : 'incorrect');
             
-            const highlightBits = maskBits.map((b, i) => b === '1' ? i : -1).filter(i => i >= 0);
+            renderBinary('inputBits', input, 8, []);
+            renderBinary('maskBits', mask, 8, []);
+            renderBinary('resultBits', bitResult, 8, []);
             
-            renderBits('bitsX', xBits, highlightBits);
-            renderBits('bitsMask', maskBits);
-            renderResultBits('bitsResult', resultBits);
+            document.getElementById('inputDec').textContent = `= ${input}`;
+            document.getElementById('maskDec').textContent = `= ${mask}`;
+            document.getElementById('resultDec').textContent = `= ${bitResult}`;
             
-            document.getElementById('decX').textContent = `= ${x}`;
-            document.getElementById('decMask').textContent = `= ${size - 1}`;
-            document.getElementById('decResult').textContent = `= ${andResult}`;
+            document.getElementById('bufferSize').textContent = bufferSize;
+            document.getElementById('maskValue').textContent = mask;
+            document.getElementById('maskBinary').textContent = '0b' + mask.toString(2);
+        }
+        
+        function renderBinary(containerId, value, bits, highlights) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
             
-            const explanation = document.getElementById('explanation');
-            if (isPowerOfTwo(size)) {
-                explanation.innerHTML = `<strong style="color: #48bb78;">SIZE = ${size} 是 2 的幂次方</strong><br>
-                    SIZE - 1 = ${size - 1}，二进制为 ${maskBits.join('')}，低位 ${Math.log2(size)} 位全为 1。<br>
-                    与运算保留 x 的低 ${Math.log2(size)} 位，结果等于 x % ${size}。`;
-            } else {
-                explanation.innerHTML = `<strong style="color: #f56565;">SIZE = ${size} 不是 2 的幂次方</strong><br>
-                    SIZE - 1 = ${size - 1}，二进制为 ${maskBits.join('')}。<br>
-                    此时 x & (SIZE-1) ≠ x % SIZE，不能使用位运算替代取模。`;
+            const binary = value.toString(2).padStart(bits, '0');
+            
+            for (let i = 0; i < binary.length; i++) {
+                const bit = document.createElement('div');
+                bit.className = 'bit';
+                if (highlights.includes(i)) {
+                    bit.classList.add('highlight');
+                }
+                bit.textContent = binary[i];
+                container.appendChild(bit);
             }
         }
         
