@@ -37,6 +37,51 @@ export default defineConfig({
           ]
         },
         {
+          text: 'C 语言',
+          collapsed: false,
+          items: [
+            { text: '指针详解', link: '/notes/c/pointer' },
+            { text: '结构体与联合体', link: '/notes/c/struct-union' },
+            { text: '预处理器', link: '/notes/c/preprocessor' },
+            { text: '堆栈内存', link: '/notes/c/stack' },
+            { text: 'static 关键字', link: '/notes/c/static' },
+            { text: '内存管理', link: '/notes/c/memory-management' }
+          ]
+        },
+        {
+          text: '计算机基础',
+          collapsed: false,
+          items: [
+            { text: '进程与线程', link: '/notes/cs/process-thread' },
+            { text: 'TCP/IP 协议', link: '/notes/cs/tcp-ip' }
+          ]
+        },
+        {
+          text: '硬件基础',
+          collapsed: false,
+          items: [
+            { text: 'ARM 架构', link: '/notes/hardware/arm-architecture' },
+            { text: 'RTOS', link: '/notes/hardware/rtos' }
+          ]
+        },
+        {
+          text: '嵌入式 Linux',
+          collapsed: false,
+          items: [
+            { text: 'Shell 脚本', link: '/notes/linux/shell' },
+            { text: 'Makefile', link: '/notes/linux/makefile' },
+            { text: '内核模块开发', link: '/notes/linux/kernel-module' },
+            { text: '字符设备驱动', link: '/notes/linux/char-driver' }
+          ]
+        },
+        {
+          text: '物联网技术',
+          collapsed: false,
+          items: [
+            { text: 'MQTT 协议', link: '/notes/iot/mqtt' }
+          ]
+        },
+        {
           text: '嵌入式开发',
           collapsed: false,
           items: [
