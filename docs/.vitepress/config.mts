@@ -104,6 +104,13 @@ export default defineConfig({
             { text: '通信协议', link: '/notes/embedded/protocol' },
             { text: 'UDP/TCP', link: '/notes/embedded/network' }
           ]
+        },
+        {
+          text: '心得随笔',
+          collapsed: true,
+          items: [
+            { text: '从轮询到观察者模式', link: '/notes/thoughts/observer-pattern' }
+          ]
         }
       ]
     },

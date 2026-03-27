@@ -14,7 +14,6 @@ updated: 2026-04-01
 tags: [标签1, 标签2]
 category: embedded/data-structure
 description: 简短描述文章内容
-difficulty: beginner | intermediate | advanced
 prerequisites:
   - /notes/c-language/pointers
   - /notes/data-structure/array
@@ -597,7 +596,7 @@ flowchart TD
 ```markdown
 ### 本节要点
 
-> 📌 **记住这三点：**
+>  **记住这三点：**
 > 1. `malloc` 分配的内存必须用 `free` 释放
 > 2. 释放后指针要置 `NULL`
 > 3. 先检查 `malloc` 返回值再使用
@@ -610,7 +609,7 @@ flowchart TD
 ### 9.1 系列文章导航
 
 ```markdown
-::: tip 📚 本文是「数据结构」系列的第 3 篇
+::: tip  本文是「数据结构」系列的第 3 篇
 1. [数组与动态数组](/notes/ds/array) ✅
 2. [链表](/notes/ds/linked-list) ✅
 3. **栈与队列**（当前）
@@ -659,8 +658,6 @@ flowchart TD
 | 日期 | 内容 |
 |------|------|
 | 2026-03-26 | 初稿发布 |
-| 2026-04-10 | 修正扩容函数的内存泄漏问题 |
-| 2026-06-01 | 新增线程安全章节 |
 ```
 
 ### 9.5 废弃文章处理
@@ -696,16 +693,6 @@ flowchart TD
 本文不假设你了解：
 - 任何高级数据结构
 - 操作系统原理
-```
-
-### 10.2 文章元信息
-
-在开头让读者快速判断这篇文章是否值得阅读：
-
-```markdown
-> ⏱️ 阅读时长：约 15 分钟
-> 📊 难度等级：中级
-> 🎯 读完你将学会：创建、插入、删除、扩容动态数组
 ```
 
 ***
