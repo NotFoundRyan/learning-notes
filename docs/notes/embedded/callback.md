@@ -116,7 +116,27 @@ int main(void) {
 typedef void (*CallbackFunc)(int param);
 ```
 
-这行代码定义了一个名为 `CallbackFunc` 的类型，它可以指向任何"返回 void、接受一个 int 参数"的函数。
+上述代码定义了回调函数的类型别名：
+
+**类型说明：**
+
+| 类型组成 | 说明 |
+|----------|------|
+| `void` | 回调函数的返回类型，通常为 void |
+| `(*CallbackFunc)` | 函数指针类型名称 |
+| `(int param)` | 回调函数的参数列表 |
+
+**使用示例：**
+
+```c
+// 任何符合此签名的函数都可以作为回调
+void my_callback(int value) {
+    printf("Received: %d\n", value);
+}
+
+CallbackFunc cb = my_callback;  // 将函数赋值给回调指针
+cb(42);  // 通过回调指针调用函数
+```
 
 ### 步骤二：保存回调指针
 
@@ -140,6 +160,15 @@ void registerCallback(CallbackFunc callback) {
 }
 ```
 
+上述代码实现了回调函数的注册：
+
+**参数说明：**
+- `callback`：要注册的回调函数指针，类型为 `CallbackFunc`
+
+**逐行解释：**
+
+`g_callback = callback` - 将外部传入的回调函数指针保存到全局变量中。这样模块内部就可以在需要的时候调用这个回调函数。
+
 ### 步骤四：触发回调
 
 当事件发生时，调用注册的回调：
@@ -152,6 +181,24 @@ void triggerEvent(int data) {
     }
 }
 ```
+
+上述代码实现了回调函数的触发：
+
+**参数说明：**
+- `data`：要传递给回调函数的数据
+
+**逐行解释：**
+
+`if (g_callback != NULL)` - **关键检查**：在调用回调函数之前，必须检查指针是否为 NULL。如果回调未被注册（指针为 NULL），跳过调用，避免程序崩溃。
+
+`g_callback(data)` - 通过函数指针调用回调函数，将数据传递给回调函数处理。
+
+**为什么必须检查 NULL？**
+
+| 情况 | 后果 |
+|------|------|
+| 未注册回调就触发事件 | `g_callback` 为 NULL，直接调用会导致程序崩溃 |
+| 注册后取消回调 | 应该将 `g_callback` 设回 NULL，触发时跳过调用 |
 
 注意：**永远要检查指针是否为 NULL**。
 
@@ -176,6 +223,27 @@ void uart_register_rx_callback(UartRxCallback cb) {
 }
 ```
 
+上述代码定义了串口接收回调的框架：
+
+**类型定义说明：**
+
+| 类型组成 | 说明 |
+|----------|------|
+| `uint8_t *data` | 指向接收数据缓冲区的指针 |
+| `uint16_t len` | 接收到的数据长度 |
+
+**变量说明：**
+
+| 变量 | 类型 | 说明 |
+|------|------|------|
+| `g_uartRxCallback` | `UartRxCallback` | 全局回调函数指针，初始化为 NULL |
+| `rxBuffer` | `uint8_t[256]` | 接收数据缓冲区，存储串口收到的字节 |
+| `rxIndex` | `uint16_t` | 当前接收位置索引 |
+
+**为什么用 static？**
+
+`static` 关键字限制了变量的作用域，只能在当前文件内访问。外部代码只能通过 `uart_register_rx_callback` 函数来注册回调，无法直接修改 `g_uartRxCallback`，提高了封装性。
+
 中断服务函数中触发回调：
 
 ```c
@@ -183,7 +251,7 @@ void USART1_IRQHandler(void) {
     if (USART_GetITStatus(USART1, USART_IT_RXNE)) {
         uint8_t data = USART_ReceiveData(USART1);
         rxBuffer[rxIndex++] = data;
-        
+
         if (data == '\n') {  // 收到完整一行
             if (g_uartRxCallback) {
                 g_uartRxCallback(rxBuffer, rxIndex);
@@ -225,6 +293,23 @@ typedef struct {
 
 static SoftTimer timers[MAX_TIMERS];
 ```
+
+上述代码定义了软件定时器的结构：
+
+**结构体成员说明：**
+
+| 成员 | 类型 | 说明 |
+|------|------|------|
+| `period` | `uint32_t` | 定时器周期，单位毫秒。每隔这么长时间触发一次回调 |
+| `counter` | `uint32_t` | 计数器，记录距离上次触发过了多久 |
+| `callback` | `TimerCallback` | 回调函数指针，定时到期时调用 |
+| `enabled` | `bool` | 定时器是否启用。false 表示空闲，可被分配 |
+
+**工作原理：**
+
+1. 在 1ms 定时器中断中，遍历所有启用的定时器
+2. 每个定时器的 `counter` 递增
+3. 当 `counter >= period` 时，调用回调函数并重置 `counter`
 
 创建定时器：
 
@@ -293,7 +378,7 @@ typedef void (*KeyCallback)(uint8_t keyId, KeyEvent event);
 void key_scan(void) {
     for (int i = 0; i < KEY_COUNT; i++) {
         bool currentState = read_key(i);
-        
+
         // 检测按下
         if (currentState && !keys[i].lastState) {
             keys[i].pressTime = getTick();
@@ -301,7 +386,7 @@ void key_scan(void) {
                 keys[i].callback(i, KEY_EVENT_PRESS);
             }
         }
-        
+
         // 检测长按（2秒）
         if (currentState && keys[i].lastState) {
             if (getTick() - keys[i].pressTime > 2000) {
@@ -311,14 +396,14 @@ void key_scan(void) {
                 keys[i].pressTime = getTick();  // 防止重复触发
             }
         }
-        
+
         // 检测释放
         if (!currentState && keys[i].lastState) {
             if (keys[i].callback) {
                 keys[i].callback(i, KEY_EVENT_RELEASE);
             }
         }
-        
+
         keys[i].lastState = currentState;
     }
 }
@@ -378,14 +463,14 @@ typedef struct {
 
 void deviceEventHandler(void *context, int event) {
     Device *device = (Device *)context;  // 转换回实际类型
-    printf("Device %s (ID: %d) received event: %d\n", 
+    printf("Device %s (ID: %d) received event: %d\n",
            device->name, device->id, event);
 }
 
 int main(void) {
     Device myDevice = {1, "Sensor"};
     EventHandler handler;
-    
+
     registerEvent(&handler, deviceEventHandler, &myDevice);
     triggerEvent(&handler, 100);
 }
@@ -411,12 +496,12 @@ bool registerCallback(uint8_t eventId, EventCallback cb, void *ctx) {
     if (callbackCount >= MAX_EVENTS) {
         return false;
     }
-    
+
     callbackTable[callbackCount].eventId = eventId;
     callbackTable[callbackCount].callback = cb;
     callbackTable[callbackCount].context = ctx;
     callbackCount++;
-    
+
     return true;
 }
 
@@ -509,7 +594,7 @@ void process_data(int data) {
     if (g_isProcessing) {
         return;  // 避免重入
     }
-    
+
     g_isProcessing = true;
     // 处理数据...
     g_isProcessing = false;

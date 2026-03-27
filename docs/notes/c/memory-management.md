@@ -44,7 +44,7 @@ void malloc_example(void) {
 }
 ```
 
-上述代码展示了 malloc 的标准使用方式。
+上述代码展示了 malloc 的标准使用方式：
 
 **关键步骤说明：**
 
@@ -55,6 +55,18 @@ void malloc_example(void) {
 | 使用 | `p[i] = value` | 通过指针访问内存 |
 | 释放 | `free(p)` | 归还内存 |
 | 置空 | `p = NULL` | 防止野指针 |
+
+**逐行解释：**
+
+`int *p = (int *)malloc(sizeof(int) * 10)` - 分配 10 个 int 大小的内存。`sizeof(int)` 确保类型安全，`(int *)` 将 `void*` 转换为 `int*`。
+
+`if (p == NULL)` - **必须检查**：malloc 可能失败，返回 NULL。不检查直接使用会导致段错误。
+
+`p[i] = i * 2` - 像数组一样使用分配的内存。`p[i]` 等价于 `*(p + i)`。
+
+`free(p)` - 释放内存，归还给系统。**忘记 free 会导致内存泄漏**。
+
+`p = NULL` - 释放后将指针置空，防止后续误用（野指针）。
 
 #### malloc 函数族
 

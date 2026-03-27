@@ -127,6 +127,27 @@ typedef enum {
 } SystemEvent;
 ```
 
+上述代码定义了状态机的状态枚举和事件枚举：
+
+**SystemState 枚举说明：**
+
+| 枚举值 | 值 | 说明 |
+|--------|-----|------|
+| `STATE_IDLE` | 0 | 空闲状态，系统未运行 |
+| `STATE_RUNNING` | 1 | 运行状态，系统正常工作 |
+| `STATE_PAUSED` | 2 | 暂停状态，系统暂停但可恢复 |
+| `STATE_ERROR` | 3 | 错误状态，系统发生异常 |
+
+**SystemEvent 枚举说明：**
+
+| 枚举值 | 值 | 说明 |
+|--------|-----|------|
+| `EVENT_START` | 0 | 启动事件，触发系统开始运行 |
+| `EVENT_STOP` | 1 | 停止事件，触发系统停止 |
+| `EVENT_PAUSE` | 2 | 暂停事件，触发系统暂停 |
+| `EVENT_RESUME` | 3 | 恢复事件，从暂停恢复运行 |
+| `EVENT_ERROR` | 4 | 错误事件，触发系统进入错误状态 |
+
 ### 状态变量
 
 ```c
@@ -146,7 +167,7 @@ void handle_event(SystemEvent event) {
                 current_state = STATE_ERROR;
             }
             break;
-            
+
         case STATE_RUNNING:
             if (event == EVENT_STOP) {
                 stop_system();
@@ -159,7 +180,7 @@ void handle_event(SystemEvent event) {
                 current_state = STATE_ERROR;
             }
             break;
-            
+
         case STATE_PAUSED:
             if (event == EVENT_RESUME) {
                 resume_system();
@@ -169,7 +190,7 @@ void handle_event(SystemEvent event) {
                 current_state = STATE_IDLE;
             }
             break;
-            
+
         case STATE_ERROR:
             if (event == EVENT_STOP) {
                 reset_system();
@@ -179,6 +200,42 @@ void handle_event(SystemEvent event) {
     }
 }
 ```
+
+上述代码实现了 Switch-Case 方式的状态机事件处理函数：
+
+**参数说明：**
+- `event`：要处理的事件类型，类型为 `SystemEvent` 枚举
+
+**状态转换逻辑：**
+
+| 当前状态 | 事件 | 动作 | 下一状态 |
+|----------|------|------|----------|
+| STATE_IDLE | EVENT_START | start_system() | STATE_RUNNING |
+| STATE_IDLE | EVENT_ERROR | 无 | STATE_ERROR |
+| STATE_RUNNING | EVENT_STOP | stop_system() | STATE_IDLE |
+| STATE_RUNNING | EVENT_PAUSE | pause_system() | STATE_PAUSED |
+| STATE_RUNNING | EVENT_ERROR | emergency_stop() | STATE_ERROR |
+| STATE_PAUSED | EVENT_RESUME | resume_system() | STATE_RUNNING |
+| STATE_PAUSED | EVENT_STOP | stop_system() | STATE_IDLE |
+| STATE_ERROR | EVENT_STOP | reset_system() | STATE_IDLE |
+
+**逐行解释：**
+
+`switch (current_state)` - 根据当前状态分发处理逻辑，每个 case 分支处理一个状态的逻辑。
+
+`case STATE_IDLE:` - 处理空闲状态。在此状态下，系统只响应 START 和 ERROR 事件，其他事件被忽略。
+
+`start_system()` - 调用系统启动函数，执行硬件初始化等操作。
+
+`current_state = STATE_RUNNING` - 更新状态变量，完成状态转换。
+
+`case STATE_RUNNING:` - 处理运行状态。在此状态下，系统响应 STOP、PAUSE、ERROR 事件。
+
+`emergency_stop()` - 紧急停止函数，在错误发生时立即停止系统，可能需要关闭电机、切断电源等。
+
+`case STATE_PAUSED:` - 处理暂停状态。在此状态下，系统可以恢复运行或完全停止。
+
+`case STATE_ERROR:` - 处理错误状态。这是系统的安全状态，只有 STOP 事件能将其重置。
 
 ### 优缺点
 
@@ -202,6 +259,17 @@ typedef struct {
     void (*action)(void);   // 执行动作
 } StateTransition;
 ```
+
+上述代码定义了状态转换规则的结构体：
+
+**结构体成员说明：**
+
+| 成员 | 类型 | 说明 |
+|------|------|------|
+| `current` | `SystemState` | 当前状态，转换的起点 |
+| `event` | `SystemEvent` | 触发转换的事件 |
+| `next` | `SystemState` | 目标状态，转换的终点 |
+| `action` | `void (*)(void)` | 状态转换时执行的函数指针，可以为 NULL 表示无动作 |
 
 ### 定义动作函数
 
@@ -230,6 +298,20 @@ StateTransition state_table[] = {
 #define TABLE_SIZE (sizeof(state_table) / sizeof(StateTransition))
 ```
 
+上述代码定义了状态转换表：
+
+**转换表说明：**
+
+这个表格完整描述了状态机的所有转换规则。每一行代表一条转换规则：当处于 `current` 状态时，如果收到 `event` 事件，则执行 `action` 函数并转换到 `next` 状态。
+
+**TABLE_SIZE 宏说明：**
+
+`sizeof(state_table)` - 获取整个数组占用的字节数。
+
+`sizeof(StateTransition)` - 获取单个结构体元素的字节数。
+
+两者相除得到数组元素个数，这样添加新规则时无需手动更新计数。
+
 ### 查表处理事件
 
 ```c
@@ -237,21 +319,42 @@ void process_event(SystemEvent event) {
     for (int i = 0; i < TABLE_SIZE; i++) {
         if (state_table[i].current == current_state &&
             state_table[i].event == event) {
-            
+
             // 执行动作
             if (state_table[i].action) {
                 state_table[i].action();
             }
-            
+
             // 状态转换
             current_state = state_table[i].next;
             return;
         }
     }
-    
+
     printf("Invalid event in current state\n");
 }
 ```
+
+上述代码实现了状态表的查表处理函数：
+
+**参数说明：**
+- `event`：要处理的事件类型
+
+**逐行解释：**
+
+`for (int i = 0; i < TABLE_SIZE; i++)` - 遍历状态转换表，查找匹配的规则。
+
+`if (state_table[i].current == current_state && state_table[i].event == event)` - 同时匹配当前状态和事件，只有两者都匹配时才执行转换。
+
+`if (state_table[i].action)` - 检查是否有关联的动作函数。如果 action 不为 NULL，则执行它。
+
+`state_table[i].action()` - 调用状态转换关联的动作函数。
+
+`current_state = state_table[i].next` - 更新当前状态，完成状态转换。
+
+`return` - 找到匹配后立即返回，避免继续遍历。
+
+`printf("Invalid event in current state\n")` - 如果遍历完整个表都没找到匹配的规则，说明当前状态下收到的事件是无效的。
 
 ### 优缺点
 
@@ -418,23 +521,23 @@ bool parse_byte(ProtocolParser *parser, uint8_t byte) {
                 parser->state = PARSE_HEADER;
             }
             break;
-            
+
         case PARSE_HEADER:
             parser->length = byte;
             parser->index = 0;
             parser->checksum = 0;
             parser->state = PARSE_DATA;
             break;
-            
+
         case PARSE_DATA:
             parser->buffer[parser->index++] = byte;
             parser->checksum += byte;
-            
+
             if (parser->index >= parser->length) {
                 parser->state = PARSE_CHECKSUM;
             }
             break;
-            
+
         case PARSE_CHECKSUM:
             parser->state = PARSE_IDLE;
             if (byte == parser->checksum) {
@@ -443,7 +546,7 @@ bool parse_byte(ProtocolParser *parser, uint8_t byte) {
             }
             break;
     }
-    
+
     return false;
 }
 ```

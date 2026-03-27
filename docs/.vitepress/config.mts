@@ -32,33 +32,42 @@ export default defineConfig({
       '/notes/': [
         {
           text: '学习笔记',
+          collapsed: true,
           items: [
             { text: '笔记索引', link: '/notes/' }
           ]
         },
         {
           text: 'C 语言',
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: '指针详解', link: '/notes/c/pointer' },
+            { text: '数组与字符串', link: '/notes/c/array-string' },
+            { text: '函数详解', link: '/notes/c/function' },
             { text: '结构体与联合体', link: '/notes/c/struct-union' },
+            { text: '位运算', link: '/notes/c/bitwise' },
             { text: '预处理器', link: '/notes/c/preprocessor' },
             { text: '堆栈内存', link: '/notes/c/stack' },
             { text: 'static 关键字', link: '/notes/c/static' },
-            { text: '内存管理', link: '/notes/c/memory-management' }
+            { text: '内存管理', link: '/notes/c/memory-management' },
+            { text: '文件操作', link: '/notes/c/file-io' },
+            { text: '多文件编程', link: '/notes/c/multi-file' }
           ]
         },
         {
           text: '计算机基础',
-          collapsed: false,
+          collapsed: true,
           items: [
+            { text: '计算机组成原理', link: '/notes/cs/computer-organization' },
+            { text: '数据结构基础', link: '/notes/cs/data-structure' },
+            { text: '数据库基础', link: '/notes/cs/database' },
             { text: '进程与线程', link: '/notes/cs/process-thread' },
             { text: 'TCP/IP 协议', link: '/notes/cs/tcp-ip' }
           ]
         },
         {
           text: '硬件基础',
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: 'ARM 架构', link: '/notes/hardware/arm-architecture' },
             { text: 'RTOS', link: '/notes/hardware/rtos' }
@@ -66,7 +75,7 @@ export default defineConfig({
         },
         {
           text: '嵌入式 Linux',
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: 'Shell 脚本', link: '/notes/linux/shell' },
             { text: 'Makefile', link: '/notes/linux/makefile' },
@@ -76,15 +85,17 @@ export default defineConfig({
         },
         {
           text: '物联网技术',
-          collapsed: false,
+          collapsed: true,
           items: [
-            { text: 'MQTT 协议', link: '/notes/iot/mqtt' }
+            { text: 'MQTT 协议', link: '/notes/iot/mqtt' },
+            { text: '传感器接口', link: '/notes/iot/sensor' }
           ]
         },
         {
           text: '嵌入式开发',
-          collapsed: false,
+          collapsed: true,
           items: [
+            { text: '寄存器详解', link: '/notes/embedded/register' },
             { text: '环形缓冲区', link: '/notes/embedded/ring-buffer' },
             { text: '回调函数', link: '/notes/embedded/callback' },
             { text: '状态机', link: '/notes/embedded/state-machine' },

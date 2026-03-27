@@ -23,15 +23,15 @@ flowchart TD
     A[static 关键字] --> B[局部变量]
     A --> C[全局变量]
     A --> D[函数]
-    
+
     B --> B1[生命周期: 程序全程]
     B --> B2[作用域: 函数内部]
     B --> B3[存储位置: 数据段/BSS段]
-    
+
     C --> C1[生命周期: 程序全程]
     C --> C2[作用域: 本文件]
     C --> C3[链接属性: 内部链接]
-    
+
     D --> D1[作用域: 本文件]
     D --> D2[链接属性: 内部链接]
 ```
@@ -186,12 +186,12 @@ typedef struct {
 
 DeviceContext* get_device_instance(void) {
     static DeviceContext instance = {0};
-    
+
     if (!instance.initialized) {
         instance.driver_handle = driver_init();
         instance.initialized = 1;
     }
-    
+
     return &instance;
 }
 
@@ -219,14 +219,14 @@ void device_write(const uint8_t *data, size_t len) {
 int expensive_calculation(int input) {
     static int cached_input = -1;
     static int cached_result = 0;
-    
+
     if (input == cached_input) {
         return cached_result;  // 返回缓存结果
     }
-    
+
     // 执行复杂计算
     int result = complex_algorithm(input);
-    
+
     cached_input = input;
     cached_result = result;
     return result;
@@ -254,7 +254,7 @@ void uart_rx_handler(uint8_t byte) {
     static ParserState state = STATE_IDLE;
     static uint8_t buffer[256];
     static uint8_t index = 0;
-    
+
     switch (state) {
         case STATE_IDLE:
             if (byte == 0xAA) {  // 帧头
@@ -263,7 +263,7 @@ void uart_rx_handler(uint8_t byte) {
                 state = STATE_RECEIVING;
             }
             break;
-            
+
         case STATE_RECEIVING:
             buffer[index++] = byte;
             if (index >= 10) {  // 假设帧长 10 字节
@@ -271,7 +271,7 @@ void uart_rx_handler(uint8_t byte) {
                 state = STATE_COMPLETE;
             }
             break;
-            
+
         case STATE_COMPLETE:
             state = STATE_IDLE;
             break;
@@ -385,12 +385,12 @@ int driver_init(void) {
     if (driver_fd >= 0) {
         return -1;  // 已初始化
     }
-    
+
     driver_fd = open_device("/dev/ttyS0");
     if (driver_fd < 0) {
         return -1;
     }
-    
+
     driver_configure(115200);
     return 0;
 }
@@ -551,11 +551,11 @@ int protocol_parse(const uint8_t *data, size_t len, ProtocolFrame *frame) {
     if (!validate_header(data[0])) {
         return -1;
     }
-    
+
     if (calculate_checksum(data, len - 1) != data[len - 1]) {
         return -2;
     }
-    
+
     // 解析帧内容
     return 0;
 }
@@ -672,20 +672,20 @@ static void task_wrapper(void *pvParameters) {
     vTaskDelete(NULL);
 }
 
-int task_create(const char *name, TaskEntry entry, void *arg, 
+int task_create(const char *name, TaskEntry entry, void *arg,
                 uint16_t stack_size, uint8_t priority) {
     if (task_count >= TASK_MAX) {
         return -1;
     }
-    
+
     TaskInfo *info = pvPortMalloc(sizeof(TaskInfo));
     if (!info) {
         return -2;
     }
-    
+
     info->entry = entry;
     info->arg = arg;
-    
+
     BaseType_t ret = xTaskCreate(
         task_wrapper,
         name,
@@ -694,12 +694,12 @@ int task_create(const char *name, TaskEntry entry, void *arg,
         priority,
         &task_handles[task_count]
     );
-    
+
     if (ret != pdPASS) {
         vPortFree(info);
         return -3;
     }
-    
+
     task_count++;
     return 0;
 }
@@ -731,11 +731,11 @@ int hal_gpio_init(uint8_t port, uint8_t pin, GpioMode mode) {
     if (!gpio) {
         return -1;
     }
-    
+
     // 配置 GPIO
     gpio->MODER &= ~(3 << (pin * 2));
     gpio->MODER |= (mode << (pin * 2));
-    
+
     return 0;
 }
 
@@ -744,13 +744,13 @@ int hal_gpio_write(uint8_t port, uint8_t pin, uint8_t value) {
     if (!gpio) {
         return -1;
     }
-    
+
     if (value) {
         gpio->BSRR = (1 << pin);
     } else {
         gpio->BSRR = (1 << (pin + 16));
     }
-    
+
     return 0;
 }
 ```
@@ -793,11 +793,11 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int get_next_id(void) {
     int result;
-    
+
     pthread_mutex_lock(&mutex);
     result = ++id;
     pthread_mutex_unlock(&mutex);
-    
+
     return result;
 }
 ```
@@ -828,11 +828,11 @@ static int id = 0;
 
 int get_next_id(void) {
     int result;
-    
+
     taskENTER_CRITICAL();
     result = ++id;
     taskEXIT_CRITICAL();
-    
+
     return result;
 }
 ```
