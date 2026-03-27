@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: "学习笔记",
   description: "个人学习笔记网站",
   lang: 'zh-CN',
@@ -111,6 +112,26 @@ export default defineConfig({
           items: [
             { text: '从轮询到观察者模式', link: '/notes/thoughts/observer-pattern' }
           ]
+        },
+        {
+          text: '深度学习',
+          collapsed: true,
+          items: [
+            { text: '系列索引', link: '/notes/deep-learning/' },
+            { text: '张量与维度', link: '/notes/deep-learning/tensor-dimension' },
+            { text: '线性层', link: '/notes/deep-learning/linear-layer' },
+            { text: '激活函数', link: '/notes/deep-learning/activation-functions' },
+            { text: '前向与反向传播', link: '/notes/deep-learning/forward-backward' },
+            { text: '损失函数与优化器', link: '/notes/deep-learning/loss-optimizer' },
+            { text: '正则化技术', link: '/notes/deep-learning/regularization' },
+            { text: '网络设计指南', link: '/notes/deep-learning/network-design' },
+            { text: '模型改进指南', link: '/notes/deep-learning/model-improvement' },
+            { text: 'CNN 基础', link: '/notes/deep-learning/cnn' },
+            { text: 'RNN 基础', link: '/notes/deep-learning/rnn' },
+            { text: 'LSTM 与 GRU', link: '/notes/deep-learning/lstm' },
+            { text: '注意力机制', link: '/notes/deep-learning/attention' },
+            { text: 'Transformer 架构', link: '/notes/deep-learning/transformer' }
+          ]
         }
       ]
     },
@@ -178,5 +199,9 @@ export default defineConfig({
 
   sitemap: {
     hostname: 'https://NotFoundRyan.github.io/learning-notes/'
+  },
+
+  mermaid: {
+    theme: 'default'
   }
-})
+}))
