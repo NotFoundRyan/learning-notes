@@ -107,6 +107,14 @@ export default withMermaid(defineConfig({
           ]
         },
         {
+          text: '开发工具',
+          collapsed: true,
+          items: [
+            { text: '系列索引', link: '/notes/tools/' },
+            { text: 'Git 版本管理', link: '/notes/tools/git' }
+          ]
+        },
+        {
           text: '心得随笔',
           collapsed: true,
           items: [
