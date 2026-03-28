@@ -83,7 +83,7 @@ O(n!)     阶乘复杂度    全排列
 
 ## 线性表
 
-<CollapsibleIframe src="/learning-notes/demos/data-structure.html" title="数据结构可视化演示" :height="600" />
+<CollapsibleIframe src="/learning-notes/demos/data-structure/data-structure.html" title="数据结构可视化演示" :height="600" />
 
 ### 数组
 

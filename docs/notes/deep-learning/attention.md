@@ -36,6 +36,8 @@ prerequisites:
 
 ***
 
+<CollapsibleIframe src="/learning-notes/demos/attention/attention.html" title="注意力机制可视化" :height="400" />
+
 ## 一、为什么需要注意力机制？
 
 ### Seq2Seq 的问题

@@ -120,6 +120,8 @@ edge_kernel = np.array([
 
 卷积核在输入图像上滑动，每个位置计算一次点积。
 
+<CollapsibleIframe src="/learning-notes/demos/cnn/cnn-layer.html" title="CNN 卷积层可视化" :height="400" />
+
 ```python
 # 片段：手动实现二维卷积
 def conv2d(input_image, kernel):

@@ -175,7 +175,7 @@ def gradient_descent(params, gradients, learning_rate):
 | 太小 | 收敛太慢、陷入局部最优 |
 | 合适 | 平稳收敛 |
 
-<CollapsibleIframe src="/learning-notes/demos/learning-rate.html" title="学习率影响可视化" :height="400" />
+<CollapsibleIframe src="/learning-notes/demos/model-improvement/learning-rate.html" title="学习率影响可视化" :height="400" />
 
 ***
 

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位运算可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .step-dot.active { background: #333; transform: scale(1.2); }
+        .operation-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2%; }
+        .bit-row { display: flex; align-items: center; gap: 1%; }
+        .bit-box { width: clamp(28px, 4vw, 45px); height: clamp(35px, 5vw, 50px); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-family: 'Monaco', 'Consolas', monospace; transition: all 0.3s; }
+        .bit-box.a { background: #e3f2fd; border: 2px solid #1976d2; }
+        .bit-box.b { background: #fce4ec; border: 2px solid #c2185b; }
+        .bit-box.result { background: #e8f5e9; border: 2px solid #388e3c; }
+        .bit-box.operator { background: #fff3e0; border: 2px solid #f57c00; font-weight: 600; }
+        .bit-value { font-size: clamp(14px, 1.8vw, 20px); font-weight: 600; }
+        .bit-label { font-size: clamp(8px, 1vw, 10px); color: #666; }
+        .bit-cell { width: clamp(20px, 3vw, 30px); height: clamp(25px, 3.5vw, 35px); display: flex; align-items: center; justify-content: center; font-size: clamp(12px, 1.5vw, 16px); font-weight: 600; border-radius: 4px; }
+        .bit-cell.one { background: #333; color: white; }
+        .bit-cell.zero { background: #eee; color: #999; }
+        .bit-cell.op { background: #fff3e0; color: #f57c00; }
+        .bit-cell.res-1 { background: #2e7d32; color: white; }
+        .bit-cell.res-0 { background: #c62828; color: white; }
+        .info-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1%; margin-top: 1%; }
+        .info-item { background: #f8f9fa; padding: 1.5%; border-radius: 8px; text-align: center; }
+        .info-label { font-size: clamp(9px, 1vw, 11px); color: #666; }
+        .info-value { font-size: clamp(14px, 1.8vw, 18px); font-weight: 600; font-family: 'Monaco', 'Consolas', monospace; margin-top: 0.5%; }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: auto; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>位运算可视化</h1>
+        <div class="step-indicator" id="stepIndicator"></div>
+        <div class="operation-panel" id="operationPanel"></div>
+        <div class="info-panel">
+            <div class="info-item"><div class="info-label">十进制 A</div><div class="info-value" id="decA">170</div></div>
+            <div class="info-item"><div class="info-label">十进制 B</div><div class="info-value" id="decB">85</div></div>
+            <div class="info-item"><div class="info-label">结果</div><div class="info-value" id="decResult">0</div></div>
+        </div>
+        <div class="explanation" id="explanation"><h3>按位与 (&)</h3><p>只有两个对应位都为 1 时，结果位才为 1。用于清除特定位或提取字段。</p></div>
+    </div>
+    <script>
+        const operations = [
+            { op: '&', name: '按位与', desc: '只有两个对应位都为 1 时，结果位才为 1。用于清除特定位或提取字段。', a: 0b10101010, b: 0b01010101 },
+            { op: '|', name: '按位或', desc: '两个对应位有一个为 1 时，结果位就为 1。用于设置特定位。', a: 0b10101010, b: 0b01010101 },
+            { op: '^', name: '按位异或', desc: '两个对应位不同时，结果位为 1。用于翻转特定位或交换变量。', a: 0b10101010, b: 0b01010101 },
+            { op: '~', name: '按位取反', desc: '0 变 1，1 变 0。注意 JavaScript 中 ~n = -(n+1)。', a: 0b00001111, b: 0 },
+            { op: '<<', name: '左移', desc: '将二进制位向左移动指定位数，右侧补 0。相当于乘以 2^n。', a: 0b00010100, b: 2 },
+            { op: '>>', name: '右移', desc: '将二进制位向右移动指定位数。对于正数，左侧补 0。相当于除以 2^n 取整。', a: 0b10101000, b: 2 }
+        ];
+        let currentIdx = 0;
+        function initIndicator() {
+            const indicator = document.getElementById('stepIndicator');
+            operations.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+                indicator.appendChild(dot);
+            });
+        }
+        function createBitDisplay(value, bits = 8) {
+            let result = [];
+            for (let i = bits - 1; i >= 0; i--) {
+                result.push((value >> i) & 1);
+            }
+            return result;
+        }
+        function renderOperation() {
+            const op = operations[currentIdx];
+            const panel = document.getElementById('operationPanel');
+            panel.innerHTML = '';
+            const aBits = createBitDisplay(op.a);
+            const bBits = op.op === '~' ? [] : createBitDisplay(op.b);
+            let result;
+            if (op.op === '&') result = op.a & op.b;
+            else if (op.op === '|') result = op.a | op.b;
+            else if (op.op === '^') result = op.a ^ op.b;
+            else if (op.op === '~') result = ~op.a;
+            else if (op.op === '<<') result = op.a << op.b;
+            else if (op.op === '>>') result = op.a >> op.b;
+            const resBits = createBitDisplay(result);
+            if (op.op === '~') {
+                const row = document.createElement('div');
+                row.className = 'bit-row';
+                const aBox = document.createElement('div');
+                aBox.className = 'bit-box a';
+                aBox.innerHTML = `<div class="bit-value">~</div><div class="bit-label">A</div>`;
+                row.appendChild(aBox);
+                panel.appendChild(row);
+                const bitsRow = document.createElement('div');
+                bitsRow.className = 'bit-row';
+                bitsRow.style.marginTop = '1%';
+                aBits.forEach(bit => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bit-cell ' + (bit ? 'one' : 'zero');
+                    cell.textContent = bit;
+                    bitsRow.appendChild(cell);
+                });
+                panel.appendChild(bitsRow);
+                const resRow = document.createElement('div');
+                resRow.className = 'bit-row';
+                resRow.style.marginTop = '1%';
+                const resVals = createBitDisplay(result, 8);
+                resVals.forEach((bit, i) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bit-cell ' + (bit ? 'res-1' : 'res-0');
+                    cell.textContent = bit;
+                    resRow.appendChild(cell);
+                });
+                panel.appendChild(resRow);
+            } else {
+                const row1 = document.createElement('div');
+                row1.className = 'bit-row';
+                const aBox = document.createElement('div');
+                aBox.className = 'bit-box a';
+                aBox.innerHTML = `<div class="bit-value">A</div><div class="bit-label">${op.a}</div>`;
+                row1.appendChild(aBox);
+                aBits.forEach(bit => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bit-cell ' + (bit ? 'one' : 'zero');
+                    cell.textContent = bit;
+                    row1.appendChild(cell);
+                });
+                panel.appendChild(row1);
+                const row2 = document.createElement('div');
+                row2.className = 'bit-row';
+                row2.style.marginTop = '0.5%';
+                const opBox = document.createElement('div');
+                opBox.className = 'bit-box operator';
+                opBox.innerHTML = `<div class="bit-value">${op.op}</div><div class="bit-label">操作符</div>`;
+                row2.appendChild(opBox);
+                const opCells = document.createElement('div');
+                opCells.style.display = 'flex';
+                opCells.style.gap = '2px';
+                bBits.forEach(bit => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bit-cell op';
+                    cell.textContent = bit;
+                    opCells.appendChild(cell);
+                });
+                row2.appendChild(opCells);
+                panel.appendChild(row2);
+                const row3 = document.createElement('div');
+                row3.className = 'bit-row';
+                row3.style.marginTop = '1%';
+                const resBox = document.createElement('div');
+                resBox.className = 'bit-box result';
+                resBox.innerHTML = `<div class="bit-value">=</div><div class="bit-label">结果</div>`;
+                row3.appendChild(resBox);
+                const resCells = document.createElement('div');
+                resCells.style.display = 'flex';
+                resCells.style.gap = '2px';
+                resBits.forEach(bit => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bit-cell ' + (bit ? 'res-1' : 'res-0');
+                    cell.textContent = bit;
+                    resCells.appendChild(cell);
+                });
+                row3.appendChild(resCells);
+                panel.appendChild(row3);
+            }
+            document.getElementById('decA').textContent = op.a;
+            document.getElementById('decB').textContent = op.op === '~' ? '-' : op.b;
+            document.getElementById('decResult').textContent = result;
+            document.getElementById('explanation').innerHTML = `<h3>${op.name} (${op.op})</h3><p>${op.desc}</p>`;
+            document.querySelectorAll('.step-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentIdx));
+        }
+        initIndicator();
+        renderOperation();
+        setInterval(() => { currentIdx = (currentIdx + 1) % operations.length; renderOperation(); }, 3000);
+    </script>
+</body>
+</html>

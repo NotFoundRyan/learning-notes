@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>满/空判断演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            padding: 2%;
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .buffer-visual {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #e8e8e8;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .cell.filled {
+            background: #666;
+            color: white;
+            border-color: #666;
+        }
+        
+        .cell.head {
+            border-color: #333;
+            border-width: 3px;
+        }
+        
+        .cell.tail {
+            border-color: #999;
+            border-width: 3px;
+        }
+        
+        .cell.head.tail {
+            border-color: #555;
+        }
+        
+        .cell-index {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+        
+        .status-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .status-box {
+            text-align: center;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        
+        .status-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .status-value.empty { color: #999; }
+        .status-value.normal { color: #333; }
+        .status-value.full { color: #333; }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-write {
+            background: #333;
+            color: white;
+        }
+        
+        .btn-write:hover {
+            background: #555;
+        }
+        
+        .btn-write:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-read {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-read:hover {
+            background: #888;
+        }
+        
+        .btn-read:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-reset {
+            background: #e8e8e8;
+            color: #333;
+        }
+        
+        .btn-reset:hover {
+            background: #ddd;
+        }
+        
+        .method-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .method-box {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .method-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .method-code {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #ccc;
+        }
+        
+        .method-result {
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .method-result.true {
+            background: #e8e8e8;
+            color: #333;
+        }
+        
+        .method-result.false {
+            background: #f5f5f5;
+            color: #999;
+        }
+        
+        .pointer-info {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .pointer-item {
+            text-align: center;
+        }
+        
+        .pointer-value {
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        .pointer-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>满/空判断演示</h2>
+        
+        <div class="card">
+            <h3>环形缓冲区状态</h3>
+            <div class="buffer-visual" id="bufferVisual"></div>
+            
+            <div class="pointer-info">
+                <div class="pointer-item">
+                    <div class="pointer-value" id="headValue">0</div>
+                    <div class="pointer-label">写指针</div>
+                </div>
+                <div class="pointer-item">
+                    <div class="pointer-value" id="tailValue">0</div>
+                    <div class="pointer-label">读指针</div>
+                </div>
+                <div class="pointer-item">
+                    <div class="pointer-value" id="countValue">0</div>
+                    <div class="pointer-label">数据量</div>
+                </div>
+            </div>
+            
+            <div class="status-display">
+                <div class="status-box">
+                    <div class="status-label">缓冲区状态</div>
+                    <div class="status-value" id="bufferStatus">空</div>
+                </div>
+                <div class="status-box">
+                    <div class="status-label">可写入</div>
+                    <div class="status-value" id="canWrite">是</div>
+                </div>
+                <div class="status-box">
+                    <div class="status-label">可读取</div>
+                    <div class="status-value" id="canRead">否</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-write" id="writeBtn" onclick="writeData()">写入数据</button>
+                <button class="btn btn-read" id="readBtn" onclick="readData()" disabled>读取数据</button>
+                <button class="btn btn-reset" onclick="reset()">重置</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>判断方法对比</h3>
+            <div class="method-compare">
+                <div class="method-box">
+                    <div class="method-title">方法一：计数器法</div>
+                    <div class="method-code">
+                        bool isEmpty() {<br>
+                        &nbsp;&nbsp;return count == 0;<br>
+                        }<br><br>
+                        bool isFull() {<br>
+                        &nbsp;&nbsp;return count == SIZE;<br>
+                        }
+                    </div>
+                    <div class="method-result" id="method1Result">isEmpty: true</div>
+                </div>
+                <div class="method-box">
+                    <div class="method-title">方法二：指针比较法</div>
+                    <div class="method-code">
+                        bool isEmpty() {<br>
+                        &nbsp;&nbsp;return head == tail;<br>
+                        }<br><br>
+                        bool isFull() {<br>
+                        &nbsp;&nbsp;return (head + 1) % SIZE == tail;<br>
+                        }
+                    </div>
+                    <div class="method-result" id="method2Result">isEmpty: true</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SIZE = 8;
+        let buffer = new Array(SIZE).fill(null);
+        let head = 0;
+        let tail = 0;
+        let count = 0;
+        let dataId = 1;
+        
+        function init() {
+            renderBuffer();
+            updateStatus();
+        }
+        
+        function renderBuffer() {
+            const container = document.getElementById('bufferVisual');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                if (buffer[i] !== null) {
+                    cell.classList.add('filled');
+                }
+                if (i === head) cell.classList.add('head');
+                if (i === tail) cell.classList.add('tail');
+                
+                cell.innerHTML = `
+                    <span>${buffer[i] !== null ? buffer[i] : '-'}</span>
+                    <span class="cell-index">[${i}]</span>
+                `;
+                container.appendChild(cell);
+            }
+        }
+        
+        function updateStatus() {
+            document.getElementById('headValue').textContent = head;
+            document.getElementById('tailValue').textContent = tail;
+            document.getElementById('countValue').textContent = count;
+            
+            const isEmpty = count === 0;
+            const isFull = count === SIZE;
+            
+            const statusEl = document.getElementById('bufferStatus');
+            if (isEmpty) {
+                statusEl.textContent = '空';
+                statusEl.className = 'status-value empty';
+            } else if (isFull) {
+                statusEl.textContent = '满';
+                statusEl.className = 'status-value full';
+            } else {
+                statusEl.textContent = '正常';
+                statusEl.className = 'status-value normal';
+            }
+            
+            document.getElementById('canWrite').textContent = isFull ? '否' : '是';
+            document.getElementById('canRead').textContent = isEmpty ? '否' : '是';
+            
+            document.getElementById('writeBtn').disabled = isFull;
+            document.getElementById('readBtn').disabled = isEmpty;
+            
+            const method1Result = document.getElementById('method1Result');
+            const method2Result = document.getElementById('method2Result');
+            
+            if (isEmpty) {
+                method1Result.textContent = 'isEmpty: true';
+                method1Result.className = 'method-result true';
+                method2Result.textContent = 'isEmpty: true';
+                method2Result.className = 'method-result true';
+            } else if (isFull) {
+                method1Result.textContent = 'isFull: true';
+                method1Result.className = 'method-result true';
+                method2Result.textContent = 'isFull: true';
+                method2Result.className = 'method-result true';
+            } else {
+                method1Result.textContent = '正常状态';
+                method1Result.className = 'method-result false';
+                method2Result.textContent = '正常状态';
+                method2Result.className = 'method-result false';
+            }
+        }
+        
+        function writeData() {
+            if (count >= SIZE) return;
+            
+            buffer[head] = 'D' + dataId++;
+            head = (head + 1) % SIZE;
+            count++;
+            
+            renderBuffer();
+            updateStatus();
+        }
+        
+        function readData() {
+            if (count === 0) return;
+            
+            buffer[tail] = null;
+            tail = (tail + 1) % SIZE;
+            count--;
+            
+            renderBuffer();
+            updateStatus();
+        }
+        
+        function reset() {
+            buffer = new Array(SIZE).fill(null);
+            head = 0;
+            tail = 0;
+            count = 0;
+            dataId = 1;
+            renderBuffer();
+            updateStatus();
+        }
+        
+        init();
+        
+        // 自动演示
+        let autoDemoInterval = null;
+        let writeCount = 0;
+        const maxWrite = 6;
+        
+        function autoDemo() {
+            if (autoDemoInterval) return;
+            
+            autoDemoInterval = setInterval(() => {
+                if (count < SIZE && writeCount < maxWrite) {
+                    writeData();
+                    writeCount++;
+                } else if (count > 0) {
+                    readData();
+                    writeCount = 0;
+                }
+            }, 800);
+        }
+        
+        autoDemo();
+    </script>
+</body>
+</html>

@@ -60,6 +60,8 @@ prerequisites:
 | 时间序列 | 股票价格 | 时间依赖 |
 | 视频 | 帧序列 | 空间+时间 |
 
+<CollapsibleIframe src="/learning-notes/demos/rnn/rnn.html" title="RNN 序列处理可视化" :height="350" />
+
 ### RNN 的核心思想
 
 RNN 的核心思想是：**维护一个隐藏状态，在时间步之间传递信息**。

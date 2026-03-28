@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>过拟合与正则化可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .mode-indicator { display: flex; justify-content: center; gap: 12px; margin-bottom: 1%; }
+        .mode-dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .mode-dot.active { background: #333; transform: scale(1.3); }
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1%; margin-bottom: 1%; }
+        .metric-card { background: #f8f8f8; border-radius: 8px; padding: 1.5%; text-align: center; }
+        .metric-label { font-size: clamp(10px, 1.1vw, 12px); color: #666; margin-bottom: 0.5%; }
+        .metric-value { font-size: clamp(16px, 2vw, 20px); font-weight: bold; color: #333; }
+        .metric-value.good { color: #2ecc71; }
+        .metric-value.bad { color: #e74c3c; }
+        .charts { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5%; min-height: 0; }
+        @media (max-width: 600px) { .charts { grid-template-columns: 1fr; } .metrics { grid-template-columns: repeat(2, 1fr); } }
+        .chart-container { background: #fff; border-radius: 12px; padding: 1.5%; display: flex; flex-direction: column; }
+        .chart-title { text-align: center; font-size: clamp(11px, 1.2vw, 14px); color: #333; margin-bottom: 1%; font-weight: bold; }
+        .chart-wrapper { flex: 1; min-height: 0; }
+        canvas { display: block; width: 100%; height: 100%; }
+        .legend { display: flex; justify-content: center; gap: 1.5%; margin-top: 1%; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: clamp(9px, 1vw, 12px); color: #666; }
+        .legend-color { width: clamp(12px, 1.5vw, 16px); height: clamp(12px, 1.5vw, 16px); border-radius: 4px; }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: 1%; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>过拟合与正则化可视化</h1>
+        <div class="mode-indicator" id="modeIndicator"></div>
+        <div class="metrics">
+            <div class="metric-card"><div class="metric-label">训练损失</div><div class="metric-value" id="trainLoss">0.85</div></div>
+            <div class="metric-card"><div class="metric-label">验证损失</div><div class="metric-value" id="valLoss">0.90</div></div>
+            <div class="metric-card"><div class="metric-label">训练准确率</div><div class="metric-value" id="trainAcc">75%</div></div>
+            <div class="metric-card"><div class="metric-label">验证准确率</div><div class="metric-value" id="valAcc">72%</div></div>
+        </div>
+        <div class="charts">
+            <div class="chart-container">
+                <div class="chart-title">拟合曲线</div>
+                <div class="chart-wrapper"><canvas id="fitChart"></canvas></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>训练数据</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>拟合曲线</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>真实函数</span></div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">损失曲线</div>
+                <div class="chart-wrapper"><canvas id="lossChart"></canvas></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>训练损失</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>验证损失</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="explanation" id="explanation"><h3>欠拟合</h3><p>模型太简单，无法捕捉数据中的规律。</p></div>
+    </div>
+    <script>
+        const fitCanvas = document.getElementById('fitChart');
+        const lossCanvas = document.getElementById('lossChart');
+        const fitCtx = fitCanvas.getContext('2d');
+        const lossCtx = lossCanvas.getContext('2d');
+        const modeIndicator = document.getElementById('modeIndicator');
+        let currentMode = 'underfit';
+        let trainLossHistory = [];
+        let valLossHistory = [];
+        const modeOrder = ['underfit', 'normal', 'overfit', 'regularized'];
+        const modes = {
+            underfit: { complexity: 2, trainLoss: 0.85, valLoss: 0.90, trainAcc: 75, valAcc: 72, title: '欠拟合', desc: '模型太简单，无法捕捉数据中的规律。训练损失和验证损失都很高。' },
+            normal: { complexity: 5, trainLoss: 0.15, valLoss: 0.18, trainAcc: 95, valAcc: 93, title: '正常拟合', desc: '模型复杂度适中，训练损失和验证损失都较低且接近。模型泛化能力好。' },
+            overfit: { complexity: 10, trainLoss: 0.02, valLoss: 0.45, trainAcc: 99, valAcc: 78, title: '过拟合', desc: '模型太复杂，记住了训练数据的噪声。训练损失很低，但验证损失很高。' },
+            regularized: { complexity: 8, trainLoss: 0.12, valLoss: 0.15, trainAcc: 94, valAcc: 92, title: '正则化后', desc: '使用 L2 正则化后，模型复杂度得到控制，泛化能力提升。' }
+        };
+        function initModeIndicator() { modeIndicator.innerHTML = ''; for (let i = 0; i < modeOrder.length; i++) { const dot = document.createElement('div'); dot.className = 'mode-dot'; modeIndicator.appendChild(dot); } }
+        function generateData(n = 20) { const data = []; for (let i = 0; i < n; i++) { const x = Math.random() * 2 - 1; const y = Math.sin(2 * Math.PI * x) + (Math.random() - 0.5) * 0.3; data.push({ x, y }); } return data.sort((a, b) => a.x - b.x); }
+        function polynomial(x, coeffs) { let result = 0; for (let i = 0; i < coeffs.length; i++) result += coeffs[i] * Math.pow(x, i); return result; }
+        function fitPolynomial(data, degree) {
+            const n = data.length, X = [], Y = [];
+            for (let i = 0; i < n; i++) { const row = []; for (let j = 0; j <= degree; j++) row.push(Math.pow(data[i].x, j)); X.push(row); Y.push([data[i].y]); }
+            const Xt = X[0].map((_, i) => X.map(row => row[i]));
+            const XtX = Xt.map((row, i) => X[0].map((_, j) => row.reduce((sum, _, k) => sum + Xt[i][k] * X[k][j], 0)));
+            const XtY = Xt.map(row => row.reduce((sum, val, k) => sum + val * Y[k][0], 0));
+            const aug = XtX.map((row, i) => [...row, XtY[i]]);
+            for (let i = 0; i < n; i++) {
+                let maxRow = i; for (let k = i + 1; k < n; k++) if (Math.abs(aug[k][i]) > Math.abs(aug[maxRow][i])) maxRow = k;
+                [aug[i], aug[maxRow]] = [aug[maxRow], aug[i]];
+                for (let k = i + 1; k < n; k++) { const factor = aug[k][i] / aug[i][i]; for (let j = i; j <= n; j++) aug[k][j] -= factor * aug[i][j]; }
+            }
+            const x = Array(n).fill(0); for (let i = n - 1; i >= 0; i--) { x[i] = aug[i][n]; for (let j = i + 1; j < n; j++) x[i] -= aug[i][j] * x[j]; x[i] /= aug[i][i]; }
+            return x;
+        }
+        let trainData = generateData();
+        function drawFitChart() {
+            const dpr = window.devicePixelRatio || 1, rect = fitCanvas.getBoundingClientRect();
+            fitCanvas.width = rect.width * dpr; fitCanvas.height = rect.height * dpr; fitCtx.scale(dpr, dpr);
+            const width = rect.width, height = rect.height, padding = Math.min(30, width * 0.1);
+            fitCtx.clearRect(0, 0, width, height);
+            const mode = modes[currentMode], coeffs = fitPolynomial(trainData, Math.min(mode.complexity, trainData.length - 1));
+            fitCtx.strokeStyle = '#ddd'; fitCtx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) { const x = padding + (width - 2 * padding) * i / 10; fitCtx.beginPath(); fitCtx.moveTo(x, padding); fitCtx.lineTo(x, height - padding); fitCtx.stroke(); }
+            for (let i = 0; i <= 10; i++) { const y = padding + (height - 2 * padding) * i / 10; fitCtx.beginPath(); fitCtx.moveTo(padding, y); fitCtx.lineTo(width - padding, y); fitCtx.stroke(); }
+            fitCtx.strokeStyle = '#2ecc71'; fitCtx.lineWidth = 2; fitCtx.setLineDash([5, 5]); fitCtx.beginPath();
+            for (let i = 0; i <= 100; i++) { const x = -1 + 2 * i / 100, y = Math.sin(2 * Math.PI * x); const px = padding + (x + 1) / 2 * (width - 2 * padding), py = height / 2 - y * (height - 2 * padding) / 3; if (i === 0) fitCtx.moveTo(px, py); else fitCtx.lineTo(px, py); }
+            fitCtx.stroke(); fitCtx.setLineDash([]);
+            fitCtx.fillStyle = '#3498db'; const dotSize = Math.min(5, width * 0.02); trainData.forEach(point => { const px = padding + (point.x + 1) / 2 * (width - 2 * padding), py = height / 2 - point.y * (height - 2 * padding) / 3; fitCtx.beginPath(); fitCtx.arc(px, py, dotSize, 0, Math.PI * 2); fitCtx.fill(); });
+            fitCtx.strokeStyle = '#e74c3c'; fitCtx.lineWidth = 2; fitCtx.beginPath();
+            for (let i = 0; i <= 100; i++) { const x = -1 + 2 * i / 100, y = polynomial(x, coeffs); if (!isFinite(y) || Math.abs(y) > 10) continue; const px = padding + (x + 1) / 2 * (width - 2 * padding), py = height / 2 - y * (height - 2 * padding) / 3; if (i === 0) fitCtx.moveTo(px, py); else fitCtx.lineTo(px, py); }
+            fitCtx.stroke();
+        }
+        function drawLossChart() {
+            const dpr = window.devicePixelRatio || 1, rect = lossCanvas.getBoundingClientRect();
+            lossCanvas.width = rect.width * dpr; lossCanvas.height = rect.height * dpr; lossCtx.scale(dpr, dpr);
+            const width = rect.width, height = rect.height, padding = Math.min(30, width * 0.1);
+            lossCtx.clearRect(0, 0, width, height);
+            lossCtx.strokeStyle = '#ddd'; lossCtx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) { const y = padding + (height - 2 * padding) * i / 5; lossCtx.beginPath(); lossCtx.moveTo(padding, y); lossCtx.lineTo(width - padding, y); lossCtx.stroke(); }
+            if (trainLossHistory.length < 2) return;
+            const maxLoss = Math.max(...trainLossHistory, ...valLossHistory) * 1.2;
+            lossCtx.strokeStyle = '#3498db'; lossCtx.lineWidth = 2; lossCtx.beginPath();
+            trainLossHistory.forEach((loss, i) => { const x = padding + i / (trainLossHistory.length - 1) * (width - 2 * padding), y = padding + (1 - loss / maxLoss) * (height - 2 * padding); if (i === 0) lossCtx.moveTo(x, y); else lossCtx.lineTo(x, y); });
+            lossCtx.stroke();
+            lossCtx.strokeStyle = '#e74c3c'; lossCtx.beginPath();
+            valLossHistory.forEach((loss, i) => { const x = padding + i / (valLossHistory.length - 1) * (width - 2 * padding), y = padding + (1 - loss / maxLoss) * (height - 2 * padding); if (i === 0) lossCtx.moveTo(x, y); else lossCtx.lineTo(x, y); });
+            lossCtx.stroke();
+        }
+        function updateMetrics() {
+            const mode = modes[currentMode];
+            document.getElementById('trainLoss').textContent = mode.trainLoss.toFixed(2);
+            document.getElementById('valLoss').textContent = mode.valLoss.toFixed(2);
+            document.getElementById('trainAcc').textContent = mode.trainAcc + '%';
+            document.getElementById('valAcc').textContent = mode.valAcc + '%';
+            document.getElementById('trainLoss').className = 'metric-value ' + (mode.trainLoss < 0.3 ? 'good' : 'bad');
+            document.getElementById('valLoss').className = 'metric-value ' + (mode.valLoss < 0.3 ? 'good' : 'bad');
+            document.getElementById('trainAcc').className = 'metric-value ' + (mode.trainAcc > 90 ? 'good' : 'bad');
+            document.getElementById('valAcc').className = 'metric-value ' + (mode.valAcc > 85 ? 'good' : 'bad');
+            document.getElementById('explanation').innerHTML = '<h3>' + mode.title + '</h3><p>' + mode.desc + '</p>';
+        }
+        function simulateTraining() {
+            trainLossHistory = []; valLossHistory = [];
+            for (let i = 0; i <= 50; i++) {
+                const progress = i / 50;
+                let trainLoss, valLoss;
+                if (currentMode === 'underfit') { trainLoss = 0.9 - progress * 0.05; valLoss = 0.95 - progress * 0.05; }
+                else if (currentMode === 'normal') { trainLoss = 0.8 * Math.exp(-3 * progress) + 0.15; valLoss = 0.85 * Math.exp(-3 * progress) + 0.18; }
+                else if (currentMode === 'overfit') { trainLoss = 0.8 * Math.exp(-5 * progress) + 0.02; valLoss = 0.3 + progress * 0.15; }
+                else { trainLoss = 0.7 * Math.exp(-3 * progress) + 0.12; valLoss = 0.75 * Math.exp(-3 * progress) + 0.15; }
+                trainLossHistory.push(trainLoss); valLossHistory.push(valLoss);
+            }
+        }
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-dot').forEach((dot, i) => dot.classList.toggle('active', modeOrder[i] === mode));
+            trainData = generateData(); simulateTraining(); updateMetrics(); drawFitChart(); drawLossChart();
+        }
+        function handleResize() { drawFitChart(); drawLossChart(); }
+        window.addEventListener('resize', handleResize);
+        initModeIndicator(); setMode('underfit');
+        let modeIdx = 0;
+        setInterval(() => { modeIdx = (modeIdx + 1) % modeOrder.length; setMode(modeOrder[modeIdx]); }, 3000);
+    </script>
+</body>
+</html>

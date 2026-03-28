@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帧结构可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .mode-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .mode-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .mode-dot.active { background: #333; transform: scale(1.2); }
+        .frame-visual { background: #fafafa; border-radius: 8px; padding: 2%; margin-bottom: 1.5%; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        .frame-row { display: flex; margin-bottom: 1%; flex: 1; align-items: center; }
+        .frame-label { width: clamp(50px, 8%, 70px); font-size: clamp(9px, 1vw, 11px); color: #666; }
+        .frame-bytes { display: flex; flex: 1; gap: 2px; overflow-x: auto; }
+        .byte-cell { min-width: clamp(28px, 4vw, 40px); height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; border: 2px solid #ddd; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; transition: all 0.3s ease; }
+        .byte-cell.header { background: #333; color: white; border-color: #333; }
+        .byte-cell.type { background: #666; color: white; border-color: #666; }
+        .byte-cell.length { background: #888; color: white; border-color: #888; }
+        .byte-cell.data { background: #e8e8e8; border-color: #ccc; }
+        .byte-cell.crc { background: #aaa; color: white; border-color: #aaa; }
+        .byte-value { font-size: clamp(10px, 1.2vw, 14px); font-weight: 600; }
+        .byte-name { font-size: clamp(7px, 0.8vw, 9px); opacity: 0.8; margin-top: 1px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 1.5%; margin-bottom: 1.5%; font-size: clamp(9px, 1vw, 11px); }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-color { width: clamp(10px, 1.2vw, 14px); height: clamp(10px, 1.2vw, 14px); border-radius: 3px; }
+        .legend-color.header { background: #333; }
+        .legend-color.type { background: #666; }
+        .legend-color.length { background: #888; }
+        .legend-color.data { background: #e8e8e8; border: 1px solid #ccc; }
+        .legend-color.crc { background: #aaa; }
+        .info-table { width: 100%; border-collapse: collapse; font-size: clamp(10px, 1.1vw, 13px); }
+        .info-table th, .info-table td { padding: 1%; text-align: left; border-bottom: 1px solid #eee; }
+        .info-table th { background: #fafafa; font-weight: 500; color: #666; }
+        .info-table code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-family: 'Monaco', 'Consolas', monospace; font-size: clamp(9px, 1vw, 11px); }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: auto; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>帧结构可视化</h1>
+        <div class="mode-indicator" id="modeIndicator"></div>
+        <div class="frame-visual">
+            <div class="frame-row">
+                <div class="frame-label">偏移</div>
+                <div class="frame-bytes" id="offsetRow"></div>
+            </div>
+            <div class="frame-row">
+                <div class="frame-label">内容</div>
+                <div class="frame-bytes" id="frameContent"></div>
+            </div>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color header"></div><span>帧头</span></div>
+            <div class="legend-item"><div class="legend-color type"></div><span>类型</span></div>
+            <div class="legend-item"><div class="legend-color length"></div><span>长度</span></div>
+            <div class="legend-item"><div class="legend-color data"></div><span>数据</span></div>
+            <div class="legend-item"><div class="legend-color crc"></div><span>校验</span></div>
+        </div>
+        <table class="info-table">
+            <thead><tr><th>字段</th><th>长度</th><th>说明</th></tr></thead>
+            <tbody>
+                <tr><td>帧头</td><td><code>1 字节</code></td><td>固定值，用于帧同步</td></tr>
+                <tr><td>类型</td><td><code>1 字节</code></td><td>标识帧的用途</td></tr>
+                <tr><td>长度</td><td><code>1 字节</code></td><td>数据字段的长度</td></tr>
+                <tr><td>数据</td><td><code>N 字节</code></td><td>实际传输的数据内容</td></tr>
+                <tr><td>校验</td><td><code>1 字节</code></td><td>用于错误检测</td></tr>
+            </tbody>
+        </table>
+        <div class="explanation" id="explanation"><h3>标准数据帧</h3><p>帧头 0xAA 用于同步，类型 0x01 表示数据帧，长度字段指示数据区大小，CRC 保证数据完整性。</p></div>
+    </div>
+    <script>
+        const modes = [
+            { header: 0xAA, type: 0x01, dataLen: 4, crcType: 'sum', name: '标准数据帧', desc: '帧头 0xAA 用于同步，类型 0x01 表示数据帧，长度字段指示数据区大小，CRC 保证数据完整性。' },
+            { header: 0x55, type: 0x02, dataLen: 8, crcType: 'xor', name: '命令帧', desc: '命令帧用于发送控制指令，类型 0x02 标识，数据区包含命令参数。' },
+            { header: 0x7E, type: 0x03, dataLen: 2, crcType: 'crc8', name: '应答帧', desc: '应答帧用于确认接收，类型 0x03 标识，数据区包含状态码。' },
+            { header: 0xAA, type: 0x01, dataLen: 16, crcType: 'sum', name: '长数据帧', desc: '长数据帧用于传输大量数据，最大支持 256 字节数据区。' }
+        ];
+        let currentIdx = 0;
+        let dataBytes = [];
+        function initIndicator() {
+            const indicator = document.getElementById('modeIndicator');
+            modes.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'mode-dot' + (i === 0 ? ' active' : '');
+                indicator.appendChild(dot);
+            });
+        }
+        function updateFrame() {
+            const mode = modes[currentIdx];
+            dataBytes = [];
+            for (let i = 0; i < mode.dataLen; i++) dataBytes.push(Math.floor(Math.random() * 256));
+            const offsetRow = document.getElementById('offsetRow');
+            const frameContent = document.getElementById('frameContent');
+            offsetRow.innerHTML = '';
+            frameContent.innerHTML = '';
+            let offset = 0;
+            offsetRow.appendChild(createOffsetCell(offset++));
+            frameContent.appendChild(createByteCell(mode.header.toString(16).toUpperCase().padStart(2, '0'), 'header', 'HEAD'));
+            offsetRow.appendChild(createOffsetCell(offset++));
+            frameContent.appendChild(createByteCell(mode.type.toString(16).toUpperCase().padStart(2, '0'), 'type', 'TYPE'));
+            offsetRow.appendChild(createOffsetCell(offset++));
+            frameContent.appendChild(createByteCell(mode.dataLen.toString(16).toUpperCase().padStart(2, '0'), 'length', 'LEN'));
+            for (let i = 0; i < mode.dataLen; i++) {
+                offsetRow.appendChild(createOffsetCell(offset++));
+                frameContent.appendChild(createByteCell(dataBytes[i].toString(16).toUpperCase().padStart(2, '0'), 'data', 'D' + i));
+            }
+            const crc = calculateCRC(mode.header, mode.type, mode.dataLen, dataBytes, mode.crcType);
+            offsetRow.appendChild(createOffsetCell(offset));
+            frameContent.appendChild(createByteCell(crc.toString(16).toUpperCase().padStart(2, '0'), 'crc', 'CRC'));
+            document.getElementById('explanation').innerHTML = `<h3>${mode.name}</h3><p>${mode.desc}</p>`;
+            document.querySelectorAll('.mode-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentIdx));
+        }
+        function createByteCell(value, type, name) {
+            const cell = document.createElement('div');
+            cell.className = 'byte-cell ' + type;
+            cell.innerHTML = `<span class="byte-value">${value}</span><span class="byte-name">${name}</span>`;
+            return cell;
+        }
+        function createOffsetCell(offset) {
+            const cell = document.createElement('div');
+            cell.className = 'byte-cell';
+            cell.style.background = 'transparent';
+            cell.style.border = 'none';
+            cell.innerHTML = `<span class="byte-value" style="font-size:clamp(8px,0.9vw,10px);color:#999">${offset}</span>`;
+            return cell;
+        }
+        function calculateCRC(header, type, length, data, crcType) {
+            let sum = header + type + length;
+            for (const b of data) sum += b;
+            if (crcType === 'sum') return sum & 0xFF;
+            else if (crcType === 'xor') { let xor = header ^ type ^ length; for (const b of data) xor ^= b; return xor; }
+            else return sum & 0xFF;
+        }
+        initIndicator();
+        updateFrame();
+        setInterval(() => { currentIdx = (currentIdx + 1) % modes.length; updateFrame(); }, 3000);
+    </script>
+</body>
+</html>

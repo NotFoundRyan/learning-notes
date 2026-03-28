@@ -13,7 +13,7 @@ difficulty: intermediate
 > 📊 难度等级：中级
 > 🎯 读完你将学会：串口工作原理、中断接收、DMA 接收、帧接收策略
 
-## TL;DR
+## 要点速览
 
 > - **串口帧结构**：起始位 + 数据位 + 校验位 + 停止位
 > - **中断接收**：每字节触发中断，适合大多数场景
@@ -30,9 +30,9 @@ difficulty: intermediate
 
 想象两个人打电话：你说话，对方听；对方说话，你听。串口也是这样——TX（发送端）说话，RX（接收端）听。但电话有"喂？听得到吗？"的确认，串口没有——它是异步的，双方约定好速度（波特率），各自按节奏发、按节奏收。
 
-<CollapsibleIframe src="/learning-notes/demos/uart-config.html" title="串口配置参数" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/uart-data/uart-config.html" title="串口配置参数" :height="500" />
 
-<CollapsibleIframe src="/learning-notes/demos/uart-buffer.html" title="串口缓冲区演示" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/uart-data/uart-buffer.html" title="串口缓冲区演示" :height="500" />
 
 ### 串口帧结构
 

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前向传播可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            padding: 2%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: 2px solid #333;
+            border-radius: 6px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+        button:hover {
+            background: #333;
+            color: white;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button.primary {
+            background: #333;
+            color: white;
+        }
+        
+        button.primary:hover {
+            background: #555;
+        }
+        
+        .network-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 30px 10px;
+            overflow-x: auto;
+            min-height: 280px;
+        }
+        
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .layer-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .neuron {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .neuron.active {
+            background: #333;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(51, 51, 51, 0.4);
+        }
+        
+        .neuron.highlight {
+            border-color: #2ecc71;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+        
+        .connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .connection {
+            stroke: #ddd;
+            stroke-width: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .connection.active {
+            stroke: #333;
+            stroke-width: 2;
+        }
+        
+        .data-flow {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #2ecc71;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #333;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .formula-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            border-left: 3px solid #333;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .step-dot.active {
+            background: #333;
+        }
+        
+        .step-dot.completed {
+            background: #2ecc71;
+        }
+        
+        .log-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            background: white;
+            border-left: 3px solid #333;
+        }
+        
+        .log-entry.highlight {
+            background: #e8f5e9;
+            border-left-color: #2ecc71;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        
+        @media (max-width: 600px) {
+            .network-container {
+                gap: 15px;
+                padding: 20px 5px;
+            }
+            
+            .neuron {
+                width: 40px;
+                height: 40px;
+                font-size: 10px;
+            }
+            
+            .button-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>前向传播可视化</h1>
+        
+        <div class="card">
+            <h2>神经网络结构</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: white;"></div>
+                    <span>未激活</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #333;"></div>
+                    <span>已激活</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71; border-color: #2ecc71;"></div>
+                    <span>当前计算</span>
+                </div>
+            </div>
+            <div class="network-container" id="networkContainer">
+                <svg class="connections" id="connectionsSvg"></svg>
+                
+                <div class="layer" id="inputLayer">
+                    <div class="layer-label">输入层<br>(2 神经元)</div>
+                    <div class="neuron" id="i0">x₁</div>
+                    <div class="neuron" id="i1">x₂</div>
+                </div>
+                
+                <div class="layer" id="hiddenLayer">
+                    <div class="layer-label">隐藏层<br>(3 神经元)</div>
+                    <div class="neuron" id="h0">h₁</div>
+                    <div class="neuron" id="h1">h₂</div>
+                    <div class="neuron" id="h2">h₃</div>
+                </div>
+                
+                <div class="layer" id="outputLayer">
+                    <div class="layer-label">输出层<br>(1 神经元)</div>
+                    <div class="neuron" id="o0">y</div>
+                </div>
+            </div>
+            
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step-dot" id="step0"></div>
+                <div class="step-dot" id="step1"></div>
+                <div class="step-dot" id="step2"></div>
+                <div class="step-dot" id="step3"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>控制面板</h2>
+            <div class="button-group">
+                <button class="primary" onclick="startAnimation()">▶ 开始演示</button>
+                <button onclick="stepForward()">下一步</button>
+                <button onclick="resetNetwork()">重置</button>
+            </div>
+            <div class="button-group">
+                <button onclick="setInput(0, 0)">输入 [0,0]</button>
+                <button onclick="setInput(0, 1)">输入 [0,1]</button>
+                <button onclick="setInput(1, 0)">输入 [1,0]</button>
+                <button onclick="setInput(1, 1)">输入 [1,1]</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>计算过程</h2>
+            <div class="info-panel">
+                <div class="info-item">
+                    <div class="info-label">当前步骤</div>
+                    <div class="info-value" id="currentStep">等待开始</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">输入值</div>
+                    <div class="info-value" id="inputValues">[?, ?]</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">隐藏层输出</div>
+                    <div class="info-value" id="hiddenValues">[?, ?, ?]</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">最终输出</div>
+                    <div class="info-value" id="outputValue">?</div>
+                </div>
+            </div>
+            
+            <div class="formula-box" id="formulaBox">
+                <strong>当前公式：</strong><br>
+                等待开始演示...
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>计算日志</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">点击"开始演示"查看前向传播过程</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 网络参数（预训练的异或网络）
+        const weights = {
+            W1: [[0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]],  // 输入->隐藏
+            b1: [0.1, 0.1, 0.1],
+            W2: [[0.6, 0.6, 0.6]],  // 隐藏->输出
+            b2: [-0.3]
+        };
+        
+        let currentInput = [1, 0];
+        let currentStep = -1;
+        let animationInterval = null;
+        
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-x));
+        }
+        
+        function relu(x) {
+            return Math.max(0, x);
+        }
+        
+        function log(message, highlight = false) {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry' + (highlight ? ' highlight' : '');
+            entry.textContent = message;
+            container.insertBefore(entry, container.firstChild);
+            
+            while (container.children.length > 15) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        function updateStepIndicator(step) {
+            for (let i = 0; i <= 3; i++) {
+                const dot = document.getElementById('step' + i);
+                dot.className = 'step-dot';
+                if (i < step) dot.classList.add('completed');
+                if (i === step) dot.classList.add('active');
+            }
+        }
+        
+        function setInput(x1, x2) {
+            currentInput = [x1, x2];
+            document.getElementById('inputValues').textContent = `[${x1}, ${x2}]`;
+            log(`设置输入: [${x1}, ${x2}]`, true);
+            resetNetwork();
+        }
+        
+        function resetNetwork() {
+            currentStep = -1;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            document.querySelectorAll('.neuron').forEach(n => {
+                n.classList.remove('active', 'highlight');
+            });
+            
+            document.querySelectorAll('.connection').forEach(c => {
+                c.classList.remove('active');
+            });
+            
+            document.getElementById('currentStep').textContent = '等待开始';
+            document.getElementById('hiddenValues').textContent = '[?, ?, ?]';
+            document.getElementById('outputValue').textContent = '?';
+            document.getElementById('formulaBox').innerHTML = '<strong>当前公式：</strong><br>等待开始演示...';
+            
+            updateStepIndicator(-1);
+        }
+        
+        function drawConnections() {
+            const svg = document.getElementById('connectionsSvg');
+            const container = document.getElementById('networkContainer');
+            const rect = container.getBoundingClientRect();
+            
+            svg.setAttribute('width', rect.width);
+            svg.setAttribute('height', rect.height);
+            svg.innerHTML = '';
+            
+            const layers = [
+                ['i0', 'i1'],
+                ['h0', 'h1', 'h2'],
+                ['o0']
+            ];
+            
+            for (let l = 0; l < layers.length - 1; l++) {
+                for (let i = 0; i < layers[l].length; i++) {
+                    for (let j = 0; j < layers[l + 1].length; j++) {
+                        const from = document.getElementById(layers[l][i]);
+                        const to = document.getElementById(layers[l + 1][j]);
+                        
+                        const fromRect = from.getBoundingClientRect();
+                        const toRect = to.getBoundingClientRect();
+                        
+                        const x1 = fromRect.left - rect.left + fromRect.width / 2;
+                        const y1 = fromRect.top - rect.top + fromRect.height / 2;
+                        const x2 = toRect.left - rect.left + toRect.width / 2;
+                        const y2 = toRect.top - rect.top + toRect.height / 2;
+                        
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x1);
+                        line.setAttribute('y1', y1);
+                        line.setAttribute('x2', x2);
+                        line.setAttribute('y2', y2);
+                        line.setAttribute('class', 'connection');
+                        line.setAttribute('id', `conn_${l}_${i}_${j}`);
+                        svg.appendChild(line);
+                    }
+                }
+            }
+        }
+        
+        function step0() {
+            currentStep = 0;
+            updateStepIndicator(0);
+            document.getElementById('currentStep').textContent = '步骤 1: 输入数据';
+            
+            const x1 = currentInput[0];
+            const x2 = currentInput[1];
+            
+            document.getElementById('i0').classList.add('active');
+            document.getElementById('i1').classList.add('active');
+            document.getElementById('i0').textContent = x1;
+            document.getElementById('i1').textContent = x2;
+            
+            document.getElementById('formulaBox').innerHTML = `
+                <strong>步骤 1: 输入数据</strong><br>
+                x₁ = ${x1}<br>
+                x₂ = ${x2}
+            `;
+            
+            log(`输入数据: x₁=${x1}, x₂=${x2}`);
+        }
+        
+        function step1() {
+            currentStep = 1;
+            updateStepIndicator(1);
+            document.getElementById('currentStep').textContent = '步骤 2: 隐藏层计算';
+            
+            const x1 = currentInput[0];
+            const x2 = currentInput[1];
+            const hidden = [];
+            
+            document.getElementById('i0').classList.remove('highlight');
+            document.getElementById('i1').classList.remove('highlight');
+            
+            for (let i = 0; i < 3; i++) {
+                const z = weights.W1[i][0] * x1 + weights.W1[i][1] * x2 + weights.b1[i];
+                hidden.push(sigmoid(z));
+                
+                document.getElementById('h' + i).classList.add('active');
+                document.getElementById('h' + i).textContent = hidden[i].toFixed(2);
+                
+                document.getElementById(`conn_0_0_${i}`).classList.add('active');
+                document.getElementById(`conn_0_1_${i}`).classList.add('active');
+            }
+            
+            document.getElementById('hiddenValues').textContent = 
+                `[${hidden.map(h => h.toFixed(2)).join(', ')}]`;
+            
+            document.getElementById('formulaBox').innerHTML = `
+                <strong>步骤 2: 隐藏层计算</strong><br>
+                z₁ = W₁·x + b₁<br>
+                h₁ = σ(z₁) = sigmoid(z₁)<br><br>
+                h₁ = ${hidden[0].toFixed(3)}<br>
+                h₂ = ${hidden[1].toFixed(3)}<br>
+                h₃ = ${hidden[2].toFixed(3)}
+            `;
+            
+            log(`隐藏层输出: [${hidden.map(h => h.toFixed(3)).join(', ')}]`, true);
+        }
+        
+        function step2() {
+            currentStep = 2;
+            updateStepIndicator(2);
+            document.getElementById('currentStep').textContent = '步骤 3: 输出层计算';
+            
+            const x1 = currentInput[0];
+            const x2 = currentInput[1];
+            
+            let hidden = [];
+            for (let i = 0; i < 3; i++) {
+                const z = weights.W1[i][0] * x1 + weights.W1[i][1] * x2 + weights.b1[i];
+                hidden.push(sigmoid(z));
+            }
+            
+            const z_out = weights.W2[0][0] * hidden[0] + 
+                          weights.W2[0][1] * hidden[1] + 
+                          weights.W2[0][2] * hidden[2] + 
+                          weights.b2[0];
+            const output = sigmoid(z_out);
+            
+            document.getElementById('o0').classList.add('active');
+            document.getElementById('o0').textContent = output.toFixed(2);
+            
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`conn_1_${i}_0`).classList.add('active');
+            }
+            
+            document.getElementById('outputValue').textContent = output.toFixed(4);
+            
+            document.getElementById('formulaBox').innerHTML = `
+                <strong>步骤 3: 输出层计算</strong><br>
+                z₂ = W₂·h + b₂<br>
+                y = σ(z₂) = sigmoid(z₂)<br><br>
+                z₂ = ${z_out.toFixed(3)}<br>
+                y = ${output.toFixed(4)}
+            `;
+            
+            log(`输出层输出: ${output.toFixed(4)}`, true);
+        }
+        
+        function step3() {
+            currentStep = 3;
+            updateStepIndicator(3);
+            document.getElementById('currentStep').textContent = '步骤 4: 完成';
+            
+            const x1 = currentInput[0];
+            const x2 = currentInput[1];
+            
+            let hidden = [];
+            for (let i = 0; i < 3; i++) {
+                const z = weights.W1[i][0] * x1 + weights.W1[i][1] * x2 + weights.b1[i];
+                hidden.push(sigmoid(z));
+            }
+            
+            const z_out = weights.W2[0][0] * hidden[0] + 
+                          weights.W2[0][1] * hidden[1] + 
+                          weights.W2[0][2] * hidden[2] + 
+                          weights.b2[0];
+            const output = sigmoid(z_out);
+            
+            const predicted = output > 0.5 ? 1 : 0;
+            const expected = (x1 !== x2) ? 1 : 0;
+            
+            document.getElementById('formulaBox').innerHTML = `
+                <strong>步骤 4: 完成</strong><br>
+                输入: [${x1}, ${x2}]<br>
+                输出: ${output.toFixed(4)}<br>
+                预测类别: ${predicted}<br>
+                期望类别: ${expected}<br>
+                ${predicted === expected ? '✓ 预测正确' : '✗ 预测错误'}
+            `;
+            
+            log(`完成! 预测: ${predicted}, 期望: ${expected}`, true);
+        }
+        
+        function stepForward() {
+            switch (currentStep) {
+                case -1: step0(); break;
+                case 0: step1(); break;
+                case 1: step2(); break;
+                case 2: step3(); break;
+                default: resetNetwork(); step0();
+            }
+        }
+        
+        function startAnimation() {
+            resetNetwork();
+            
+            const steps = [step0, step1, step2, step3];
+            let stepIndex = 0;
+            
+            steps[stepIndex]();
+            stepIndex++;
+            
+            animationInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    steps[stepIndex]();
+                    stepIndex++;
+                } else {
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+            }, 1500);
+        }
+        
+        // 初始化
+        window.addEventListener('load', () => {
+            drawConnections();
+            setInput(1, 0);
+            
+            // 自动开始演示
+            setTimeout(startAnimation, 500);
+            
+            // 循环播放
+            setInterval(() => {
+                stepIndex = 0;
+                startAnimation();
+            }, 8000);
+        });
+        
+        window.addEventListener('resize', drawConnections);
+    </script>
+</body>
+</html>

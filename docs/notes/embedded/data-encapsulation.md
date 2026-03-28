@@ -13,7 +13,7 @@ difficulty: beginner
 > 📊 难度等级：初级
 > 🎯 读完你将学会：数据帧结构设计、CRC 校验原理、数据打包解包、序列化处理
 
-## TL;DR
+## 要点速览
 
 > - **数据封装**把原始数据打包成帧，解决边界、类型、完整性问题
 > - **帧结构**包含帧头、长度、命令、数据、CRC、帧尾
@@ -37,9 +37,9 @@ difficulty: beginner
 | **校验** | 验证数据是否完整 | CRC16 |
 | **帧尾** | 标识数据帧的结束 | 0x0D |
 
-<CollapsibleIframe src="/learning-notes/demos/data-frame.html" title="帧结构可视化" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/protocol/data-frame.html" title="帧结构可视化" :height="500" />
 
-<CollapsibleIframe src="/learning-notes/demos/data-crc.html" title="CRC 校验计算" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/protocol/data-crc.html" title="CRC 校验计算" :height="500" />
 
 ## 为什么需要数据封装？
 

@@ -43,7 +43,7 @@ $$
 
 **激活函数引入非线性**，使神经网络能够拟合任意复杂的函数。
 
-<CollapsibleIframe src="/learning-notes/demos/activation-functions.html" title="激活函数可视化" :height="400" />
+<CollapsibleIframe src="/learning-notes/demos/activation-functions/activation-functions.html" title="激活函数可视化" :height="400" />
 
 ***
 

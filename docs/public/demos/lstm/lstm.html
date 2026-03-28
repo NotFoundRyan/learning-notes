@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSTM 门控机制可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .step-dot.active { background: #333; transform: scale(1.2); }
+        .lstm-cell { flex: 1; min-height: 0; background: white; border-radius: 12px; padding: 2%; display: flex; flex-direction: column; align-items: center; }
+        .cell-diagram { display: flex; align-items: center; justify-content: center; flex: 1; width: 100%; gap: 1%; }
+        .gate-box { display: flex; flex-direction: column; align-items: center; padding: 1.5%; border-radius: 8px; min-width: clamp(60px, 10%, 90px); transition: all 0.3s; }
+        .gate-box.active { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .gate-box.forget { background: #ffebee; border: 2px solid #ef5350; }
+        .gate-box.input { background: #e8f5e9; border: 2px solid #66bb6a; }
+        .gate-box.output { background: #e3f2fd; border: 2px solid #42a5f5; }
+        .gate-box.cell { background: #fff3e0; border: 2px solid #ffa726; }
+        .gate-icon { font-size: clamp(20px, 3vw, 32px); margin-bottom: 0.5%; }
+        .gate-name { font-size: clamp(10px, 1.2vw, 13px); font-weight: 600; color: #333; }
+        .gate-value { font-family: 'Monaco', 'Consolas', monospace; font-size: clamp(11px, 1.3vw, 14px); margin-top: 0.5%; color: #666; }
+        .flow-arrow { font-size: clamp(16px, 2vw, 24px); color: #999; }
+        .info-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1%; margin-top: 1%; }
+        @media (max-width: 600px) { .info-panel { grid-template-columns: repeat(2, 1fr); } }
+        .info-item { background: #f8f9fa; padding: 1.5%; border-radius: 8px; text-align: center; }
+        .info-label { font-size: clamp(9px, 1vw, 11px); color: #666; margin-bottom: 0.5%; }
+        .info-value { font-size: clamp(14px, 1.6vw, 18px); font-weight: 600; color: #333; font-family: 'Monaco', 'Consolas', monospace; }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: 1%; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LSTM 门控机制可视化</h1>
+        <div class="step-indicator" id="stepIndicator"></div>
+        <div class="lstm-cell">
+            <div class="cell-diagram">
+                <div class="gate-box forget" id="forgetGate"><div class="gate-icon">🗑️</div><div class="gate-name">遗忘门</div><div class="gate-value" id="forgetValue">σ</div></div>
+                <div class="flow-arrow">→</div>
+                <div class="gate-box input" id="inputGate"><div class="gate-icon">📥</div><div class="gate-name">输入门</div><div class="gate-value" id="inputValue">σ</div></div>
+                <div class="flow-arrow">→</div>
+                <div class="gate-box cell" id="cellState"><div class="gate-icon">🧠</div><div class="gate-name">细胞状态</div><div class="gate-value" id="cellValue">C<t-1</t></div></div>
+                <div class="flow-arrow">→</div>
+                <div class="gate-box output" id="outputGate"><div class="gate-icon">📤</div><div class="gate-name">输出门</div><div class="gate-value" id="outputValue">σ</div></div>
+            </div>
+        </div>
+        <div class="info-panel">
+            <div class="info-item"><div class="info-label">遗忘门输出</div><div class="info-value" id="fOut">0.80</div></div>
+            <div class="info-item"><div class="info-label">输入门输出</div><div class="info-value" id="iOut">0.30</div></div>
+            <div class="info-item"><div class="info-label">细胞状态</div><div class="info-value" id="cOut">0.65</div></div>
+            <div class="info-item"><div class="info-label">隐藏状态</div><div class="info-value" id="hOut">0.42</div></div>
+        </div>
+        <div class="explanation" id="explanation"><h3>遗忘门</h3><p>遗忘门决定从细胞状态中丢弃什么信息。输出 0~1 的值，0 表示完全丢弃，1 表示完全保留。</p></div>
+    </div>
+    <script>
+        const steps = [
+            { gate: 'forget', title: '遗忘门', desc: '遗忘门决定从细胞状态中丢弃什么信息。输出 0~1 的值，0 表示完全丢弃，1 表示完全保留。公式：f_t = σ(W_f · [h_{t-1}, x_t] + b_f)', values: { f: 0.80, i: 0.30, c: 0.65, h: 0.42 } },
+            { gate: 'input', title: '输入门', desc: '输入门决定什么新信息将被存储到细胞状态中。包含两部分：sigmoid 决定更新哪些值，tanh 创建新候选值。', values: { f: 0.80, i: 0.60, c: 0.70, h: 0.42 } },
+            { gate: 'cell', title: '细胞状态更新', desc: '细胞状态更新：C_t = f_t * C_{t-1} + i_t * C̃_t。这是 LSTM 的核心，信息可以无损地沿时间传递。', values: { f: 0.80, i: 0.60, c: 0.72, h: 0.45 } },
+            { gate: 'output', title: '输出门', desc: '输出门决定输出什么值。输出基于细胞状态，但会经过过滤。o_t = σ(W_o · [h_{t-1}, x_t] + b_o)，h_t = o_t * tanh(C_t)。', values: { f: 0.80, i: 0.60, c: 0.72, h: 0.58 } }
+        ];
+        let currentStep = 0;
+        function initIndicator() {
+            const indicator = document.getElementById('stepIndicator');
+            steps.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+                indicator.appendChild(dot);
+            });
+        }
+        function updateStep() {
+            const step = steps[currentStep];
+            document.querySelectorAll('.gate-box').forEach(box => box.classList.remove('active'));
+            document.getElementById(step.gate + 'Gate').classList.add('active');
+            document.getElementById('fOut').textContent = step.values.f.toFixed(2);
+            document.getElementById('iOut').textContent = step.values.i.toFixed(2);
+            document.getElementById('cOut').textContent = step.values.c.toFixed(2);
+            document.getElementById('hOut').textContent = step.values.h.toFixed(2);
+            document.getElementById('explanation').innerHTML = `<h3>${step.title}</h3><p>${step.desc}</p>`;
+            document.querySelectorAll('.step-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentStep));
+            currentStep = (currentStep + 1) % steps.length;
+        }
+        initIndicator();
+        updateStep();
+        setInterval(updateStep, 3000);
+    </script>
+</body>
+</html>

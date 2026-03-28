@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按键回调演示</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .step-dot.active { background: #333; transform: scale(1.2); }
+        .button-area { display: flex; justify-content: center; gap: 2%; margin-bottom: 2%; }
+        .btn { width: clamp(60px, 10vw, 100px); height: clamp(60px, 10vw, 100px); border-radius: 50%; border: none; font-size: clamp(10px, 1.2vw, 14px); font-weight: 600; transition: all 0.15s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        .btn-normal { background: #e8e8e8; color: #333; }
+        .btn-pressed { background: #333; color: white; transform: scale(0.95); }
+        .cards { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5%; }
+        @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+        .card { background: rgba(255, 255, 255, 0.8); border-radius: 12px; padding: 2%; display: flex; flex-direction: column; }
+        .card h3 { font-size: clamp(11px, 1.2vw, 14px); color: #666; margin-bottom: 1%; font-weight: 500; }
+        .callback-list { display: flex; flex-direction: column; gap: 1%; flex: 1; }
+        .callback-item { display: flex; align-items: center; gap: 1%; padding: 1.5%; background: #fafafa; border-radius: 6px; font-size: clamp(10px, 1.1vw, 13px); transition: all 0.2s; }
+        .callback-item.active { background: #333; color: white; }
+        .callback-item .name { flex: 1; }
+        .callback-item .status { font-size: clamp(8px, 0.9vw, 11px); padding: 2px 8px; border-radius: 10px; background: #e8e8e8; }
+        .callback-item.active .status { background: rgba(255,255,255,0.2); }
+        .log-container { background: #fafafa; border-radius: 8px; padding: 2%; flex: 1; overflow-y: auto; font-family: 'Monaco', 'Consolas', monospace; font-size: clamp(9px, 1vw, 12px); }
+        .log-entry { padding: 1%; margin-bottom: 0.5%; border-radius: 4px; background: white; border-left: 3px solid #ccc; }
+        .log-entry.pressed { border-left-color: #333; }
+        .log-entry.released { border-left-color: #999; }
+        .log-entry.callback { border-left-color: #555; }
+        .timestamp { color: #999; margin-right: 1%; }
+        .event-type { font-weight: 600; }
+        .event-type.press { color: #333; }
+        .event-type.release { color: #666; }
+        .event-type.callback { color: #555; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1%; margin-top: 1%; }
+        .stat-item { text-align: center; padding: 1.5%; background: #fafafa; border-radius: 8px; }
+        .stat-value { font-size: clamp(16px, 2vw, 24px); font-weight: 600; color: #333; }
+        .stat-label { font-size: clamp(9px, 1vw, 11px); color: #666; margin-top: 0.5%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>按键回调演示</h1>
+        <div class="step-indicator" id="stepIndicator"></div>
+        <div class="button-area">
+            <button class="btn btn-normal" id="btn1">按键 1</button>
+            <button class="btn btn-normal" id="btn2">按键 2</button>
+            <button class="btn btn-normal" id="btn3">按键 3</button>
+        </div>
+        <div class="cards">
+            <div class="card">
+                <h3>注册的回调函数</h3>
+                <div class="callback-list">
+                    <div class="callback-item" id="cb1"><span class="name">onButtonPress</span><span class="status">按下时触发</span></div>
+                    <div class="callback-item" id="cb2"><span class="name">onButtonRelease</span><span class="status">释放时触发</span></div>
+                    <div class="callback-item" id="cb3"><span class="name">onButtonClick</span><span class="status">点击完成触发</span></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>事件日志</h3>
+                <div class="log-container" id="logContainer"></div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-item"><div class="stat-value" id="pressCount">0</div><div class="stat-label">按下次数</div></div>
+            <div class="stat-item"><div class="stat-value" id="releaseCount">0</div><div class="stat-label">释放次数</div></div>
+            <div class="stat-item"><div class="stat-value" id="clickCount">0</div><div class="stat-label">点击次数</div></div>
+        </div>
+    </div>
+    <script>
+        let pressCount = 0, releaseCount = 0, clickCount = 0;
+        const steps = ['btn1', 'btn2', 'btn3'];
+        let currentStep = 0;
+        function initIndicator() { const indicator = document.getElementById('stepIndicator'); steps.forEach((_, i) => { const dot = document.createElement('div'); dot.className = 'step-dot' + (i === 0 ? ' active' : ''); indicator.appendChild(dot); }); }
+        function log(msg, type = '') { const c = document.getElementById('logContainer'); const e = document.createElement('div'); e.className = 'log-entry ' + type; const t = new Date().toLocaleTimeString('zh-CN', { hour12: false }); e.innerHTML = `<span class="timestamp">${t}</span>${msg}`; c.insertBefore(e, c.firstChild); while (c.children.length > 15) c.removeChild(c.lastChild); }
+        function flash(id) { const el = document.getElementById(id); el.classList.add('active'); setTimeout(() => el.classList.remove('active'), 200); }
+        function buttonPress(id) {
+            const btn = document.getElementById(id); btn.className = 'btn btn-pressed';
+            pressCount++; document.getElementById('pressCount').textContent = pressCount;
+            log(`<span class="event-type press">${id.replace('btn','按键')}按下</span>`, 'pressed');
+            flash('cb1'); log(`<span class="event-type callback">→ onButtonPress(${id.replace('btn','')})</span>`, 'callback');
+        }
+        function buttonRelease(id) {
+            const btn = document.getElementById(id); btn.className = 'btn btn-normal';
+            releaseCount++; clickCount++; document.getElementById('releaseCount').textContent = releaseCount; document.getElementById('clickCount').textContent = clickCount;
+            log(`<span class="event-type release">${id.replace('btn','按键')}释放</span>`, 'released');
+            flash('cb2'); log(`<span class="event-type callback">→ onButtonRelease</span>`, 'callback');
+            flash('cb3'); log(`<span class="event-type callback">→ onButtonClick</span>`, 'callback');
+        }
+        function autoDemo() {
+            const id = steps[currentStep];
+            buttonPress(id);
+            setTimeout(() => buttonRelease(id), 400);
+            document.querySelectorAll('.step-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentStep));
+            currentStep = (currentStep + 1) % steps.length;
+        }
+        initIndicator();
+        autoDemo();
+        setInterval(autoDemo, 2000);
+    </script>
+</body>
+</html>

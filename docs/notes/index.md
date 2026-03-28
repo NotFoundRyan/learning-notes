@@ -131,9 +131,9 @@ title: 学习笔记索引
 
 每个笔记都配有交互式 HTML 演示，帮助你直观理解核心概念：
 
-- [回调函数演示](/demos/callback.html)
-- [状态机演示](/demos/state-machine.html)
-- [数据封装演示](/demos/data-frame.html)
-- [串口数据演示](/demos/uart-buffer.html)
-- [通信协议演示](/demos/protocol-flow.html)
-- [网络通信演示](/demos/network-compare.html)
+- [回调函数演示](/demos/callback/callback-button.html)
+- [状态机演示](/demos/state-machine/state-machine.html)
+- [数据封装演示](/demos/protocol/data-frame.html)
+- [串口数据演示](/demos/uart-data/uart-buffer.html)
+- [环形缓冲区演示](/demos/ring-buffer/ring-buffer.html)
+- [网络通信演示](/demos/network-design/network-compare.html)

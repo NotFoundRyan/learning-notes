@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注意力机制可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .mode-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .mode-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .mode-dot.active { background: #333; transform: scale(1.2); }
+        .formula-box { background: #f8f9fa; padding: 1.5%; border-radius: 8px; margin-bottom: 1%; text-align: center; font-family: 'Times New Roman', serif; font-size: clamp(12px, 1.5vw, 18px); }
+        .attention-grid { flex: 1; min-height: 0; display: flex; gap: 1.5%; }
+        .matrix-panel { flex: 1; background: white; border-radius: 12px; padding: 1.5%; display: flex; flex-direction: column; }
+        .matrix-panel h3 { font-size: clamp(11px, 1.2vw, 14px); color: #666; margin-bottom: 1%; text-align: center; }
+        .matrix-container { flex: 1; display: flex; align-items: center; justify-content: center; }
+        .matrix { display: grid; gap: 2px; }
+        .matrix-cell { width: clamp(28px, 4vw, 45px); height: clamp(28px, 4vw, 45px); display: flex; align-items: center; justify-content: center; font-family: 'Monaco', 'Consolas', monospace; font-size: clamp(9px, 1vw, 12px); border-radius: 4px; transition: all 0.3s; }
+        .matrix-cell.label { background: #333; color: white; font-weight: 500; }
+        .matrix-cell.value { background: #f0f0f0; }
+        .matrix-cell.highlight { background: #666; color: white; }
+        .labels { display: flex; flex-direction: column; gap: 2px; margin-right: 4px; }
+        .labels-row { display: flex; gap: 2px; margin-bottom: 4px; justify-content: flex-end; }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: 1%; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>注意力机制可视化</h1>
+        <div class="mode-indicator" id="modeIndicator"></div>
+        <div class="formula-box" id="formulaBox">Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) V</div>
+        <div class="attention-grid">
+            <div class="matrix-panel">
+                <h3>Query (Q)</h3>
+                <div class="matrix-container"><div class="matrix" id="queryMatrix"></div></div>
+            </div>
+            <div class="matrix-panel">
+                <h3>Key (K)</h3>
+                <div class="matrix-container"><div class="matrix" id="keyMatrix"></div></div>
+            </div>
+            <div class="matrix-panel">
+                <h3>注意力权重</h3>
+                <div class="matrix-container"><div class="matrix" id="attentionMatrix"></div></div>
+            </div>
+            <div class="matrix-panel">
+                <h3>输出 (V 加权)</h3>
+                <div class="matrix-container"><div class="matrix" id="outputMatrix"></div></div>
+            </div>
+        </div>
+        <div class="explanation" id="explanation"><h3>Self-Attention 计算过程</h3><p>Q 与 K 的点积衡量相似度，经过 softmax 归一化得到注意力权重，再与 V 加权求和得到输出。</p></div>
+    </div>
+    <script>
+        const modes = [
+            { name: 'Self-Attention', desc: 'Self-Attention 让序列中的每个位置关注其他所有位置。Q=K=V 来自同一输入，通过不同权重矩阵投影。' },
+            { name: 'Cross-Attention', desc: 'Cross-Attention 中 Q 来自解码器，K 和 V 来自编码器。用于 Seq2Seq 模型的解码阶段。' },
+            { name: 'Multi-Head', desc: 'Multi-Head Attention 将 Q、K、V 分成多个头并行计算，每个头学习不同的注意力模式。' }
+        ];
+        let currentIdx = 0;
+        const tokens = ['我', '爱', '学', '习'];
+        function initIndicator() {
+            const indicator = document.getElementById('modeIndicator');
+            modes.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'mode-dot' + (i === 0 ? ' active' : '');
+                indicator.appendChild(dot);
+            });
+        }
+        function createMatrix(containerId, data, isLabel = false, highlightRow = -1) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const cols = data[0].length;
+            container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            data.forEach((row, i) => {
+                row.forEach((val, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell ' + (isLabel ? 'label' : 'value');
+                    if (i === highlightRow) cell.classList.add('highlight');
+                    cell.textContent = typeof val === 'number' ? val.toFixed(2) : val;
+                    container.appendChild(cell);
+                });
+            });
+        }
+        function softmax(arr) {
+            const max = Math.max(...arr);
+            const exp = arr.map(x => Math.exp(x - max));
+            const sum = exp.reduce((a, b) => a + b, 0);
+            return exp.map(x => x / sum);
+        }
+        function updateAttention() {
+            const mode = modes[currentIdx];
+            const Q = [[0.8, 0.2], [0.3, 0.7], [0.5, 0.5], [0.1, 0.9]];
+            const K = [[0.7, 0.3], [0.4, 0.6], [0.6, 0.4], [0.2, 0.8]];
+            const V = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5], [0.8, 0.2]];
+            const d_k = 2;
+            const scores = Q.map(q => K.map(k => q.reduce((s, qi, i) => s + qi * k[i], 0) / Math.sqrt(d_k)));
+            const attention = scores.map(row => softmax(row));
+            const output = attention.map(att => {
+                return [att.reduce((s, a, i) => s + a * V[i][0], 0), att.reduce((s, a, i) => s + a * V[i][1], 0)];
+            });
+            const qLabels = tokens.map((t, i) => [t, `d${i}`]);
+            const kLabels = tokens.map((t, i) => [t, `d${i}`]);
+            createMatrix('queryMatrix', qLabels, true);
+            createMatrix('keyMatrix', kLabels, true);
+            const attLabels = [['', ...tokens], ...tokens.map(t => [t])];
+            const attData = attLabels.map((row, i) => i === 0 ? row : [...row, ...attention[i-1]]);
+            createMatrix('attentionMatrix', attData.map((r, i) => i === 0 ? r : r.slice(1)), i => i === 0);
+            const outLabels = tokens.map((t, i) => [t, output[i][0].toFixed(2), output[i][1].toFixed(2)]);
+            createMatrix('outputMatrix', outLabels, true);
+            document.getElementById('explanation').innerHTML = `<h3>${mode.name}</h3><p>${mode.desc}</p>`;
+            document.querySelectorAll('.mode-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentIdx));
+        }
+        initIndicator();
+        updateAttention();
+        setInterval(() => { currentIdx = (currentIdx + 1) % modes.length; updateAttention(); }, 3000);
+    </script>
+</body>
+</html>

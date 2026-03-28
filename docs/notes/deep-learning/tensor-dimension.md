@@ -83,7 +83,7 @@ print(f"批次形状: {batch.shape}")  # (32, 224, 224, 3)
 
 ## 维度的直观理解
 
-<CollapsibleIframe src="/learning-notes/demos/tensor-dimension.html" title="张量维度可视化" :height="400" />
+<CollapsibleIframe src="/learning-notes/demos/tensor-dimension/tensor-dimension.html" title="张量维度可视化" :height="400" />
 
 ## 为什么维度很重要？
 

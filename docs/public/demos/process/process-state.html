@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程状态转换可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 2%; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; margin-bottom: 1%; font-size: clamp(14px, 2vw, 24px); }
+        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 1%; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s; }
+        .step-dot.active { background: #333; transform: scale(1.2); }
+        .state-diagram { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; }
+        .state-node { position: absolute; padding: 1.5% 2.5%; border-radius: 12px; text-align: center; transition: all 0.3s; min-width: clamp(80px, 12%, 120px); }
+        .state-node.active { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+        .state-node.created { background: #e3f2fd; border: 2px solid #1976d2; top: 5%; left: 50%; transform: translateX(-50%); }
+        .state-node.ready { background: #fff3e0; border: 2px solid #f57c00; top: 35%; left: 15%; }
+        .state-node.running { background: #e8f5e9; border: 2px solid #388e3c; top: 35%; left: 50%; transform: translateX(-50%); }
+        .state-node.blocked { background: #fce4ec; border: 2px solid #c2185b; top: 35%; right: 15%; }
+        .state-node.terminated { background: #f5f5f5; border: 2px solid #757575; bottom: 5%; left: 50%; transform: translateX(-50%); }
+        .state-name { font-size: clamp(12px, 1.4vw, 16px); font-weight: 600; color: #333; }
+        .state-desc { font-size: clamp(9px, 1vw, 11px); color: #666; margin-top: 0.5%; }
+        .arrow { position: absolute; font-size: clamp(10px, 1.2vw, 14px); color: #666; }
+        .arrow-label { font-size: clamp(8px, 0.9vw, 10px); background: white; padding: 1px 4px; border-radius: 3px; }
+        .process-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1%; margin-top: 1%; }
+        @media (max-width: 600px) { .process-info { grid-template-columns: repeat(2, 1fr); } }
+        .info-item { background: #f8f9fa; padding: 1.5%; border-radius: 8px; text-align: center; }
+        .info-label { font-size: clamp(9px, 1vw, 11px); color: #666; }
+        .info-value { font-size: clamp(12px, 1.4vw, 16px); font-weight: 600; margin-top: 0.5%; font-family: 'Monaco', 'Consolas', monospace; }
+        .explanation { padding: 1.5%; background: #fff; border-left: 4px solid #333; border-radius: 0 8px 8px 0; margin-top: auto; }
+        .explanation h3 { color: #333; margin-bottom: 0.5%; font-size: clamp(12px, 1.3vw, 14px); }
+        .explanation p { color: #666; font-size: clamp(10px, 1.2vw, 13px); line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>进程状态转换可视化</h1>
+        <div class="step-indicator" id="stepIndicator"></div>
+        <div class="state-diagram">
+            <div class="state-node created" id="stateCreated"><div class="state-name">创建</div><div class="state-desc">New</div></div>
+            <div class="state-node ready" id="stateReady"><div class="state-name">就绪</div><div class="state-desc">Ready</div></div>
+            <div class="state-node running" id="stateRunning"><div class="state-name">运行</div><div class="state-desc">Running</div></div>
+            <div class="state-node blocked" id="stateBlocked"><div class="state-name">阻塞</div><div class="state-desc">Blocked</div></div>
+            <div class="state-node terminated" id="stateTerminated"><div class="state-name">终止</div><div class="state-desc">Terminated</div></div>
+        </div>
+        <div class="process-info">
+            <div class="info-item"><div class="info-label">进程 ID</div><div class="info-value" id="pid">1234</div></div>
+            <div class="info-item"><div class="info-label">当前状态</div><div class="info-value" id="currentState">创建</div></div>
+            <div class="info-item"><div class="info-label">CPU 时间</div><div class="info-value" id="cpuTime">0ms</div></div>
+            <div class="info-item"><div class="info-label">等待时间</div><div class="info-value" id="waitTime">0ms</div></div>
+        </div>
+        <div class="explanation" id="explanation"><h3>进程创建</h3><p>进程刚被创建，分配 PCB，但尚未进入就绪队列。需要完成初始化后才能被调度执行。</p></div>
+    </div>
+    <script>
+        const transitions = [
+            { from: 'Created', to: 'Ready', title: '进程创建', desc: '进程刚被创建，分配 PCB，但尚未进入就绪队列。需要完成初始化后才能被调度执行。', pid: 1234, cpu: 0, wait: 0 },
+            { from: 'Ready', to: 'Running', title: '调度执行', desc: '调度器从就绪队列选择进程，分配 CPU 执行。进程从就绪态转为运行态。', pid: 1234, cpu: 10, wait: 5 },
+            { from: 'Running', to: 'Ready', title: '时间片用完', desc: '进程时间片用完，被调度器抢占，返回就绪队列等待下次调度。', pid: 1234, cpu: 100, wait: 0 },
+            { from: 'Running', to: 'Blocked', title: '等待资源', desc: '进程请求 I/O 或等待资源，主动放弃 CPU，进入阻塞状态。', pid: 1234, cpu: 50, wait: 0 },
+            { from: 'Blocked', to: 'Ready', title: '资源就绪', desc: '等待的事件发生（如 I/O 完成），进程被唤醒，进入就绪队列。', pid: 1234, cpu: 50, wait: 100 },
+            { from: 'Running', to: 'Terminated', title: '进程终止', desc: '进程执行完毕或被强制终止，释放所有资源，从系统中移除。', pid: 1234, cpu: 200, wait: 5 }
+        ];
+        let currentIdx = 0;
+        function initIndicator() {
+            const indicator = document.getElementById('stepIndicator');
+            transitions.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+                indicator.appendChild(dot);
+            });
+        }
+        function updateTransition() {
+            const t = transitions[currentIdx];
+            document.querySelectorAll('.state-node').forEach(node => node.classList.remove('active'));
+            const stateMap = { 'Created': 'stateCreated', 'Ready': 'stateReady', 'Running': 'stateRunning', 'Blocked': 'stateBlocked', 'Terminated': 'stateTerminated' };
+            document.getElementById(stateMap[t.to]).classList.add('active');
+            document.getElementById('pid').textContent = t.pid;
+            document.getElementById('currentState').textContent = t.to;
+            document.getElementById('cpuTime').textContent = t.cpu + 'ms';
+            document.getElementById('waitTime').textContent = t.wait + 'ms';
+            document.getElementById('explanation').innerHTML = `<h3>${t.title}</h3><p>${t.desc}</p><br><p><strong>状态转换：</strong>${t.from} → ${t.to}</p>`;
+            document.querySelectorAll('.step-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentIdx));
+            currentIdx = (currentIdx + 1) % transitions.length;
+        }
+        initIndicator();
+        updateTransition();
+        setInterval(updateTransition, 3000);
+    </script>
+</body>
+</html>

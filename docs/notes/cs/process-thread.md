@@ -68,6 +68,8 @@ stateDiagram-v2
 
 上述状态图展示了进程的生命周期。
 
+<CollapsibleIframe src="/learning-notes/demos/process/process-state.html" title="进程状态转换可视化" :height="450" />
+
 **状态说明：**
 
 | 状态 | 说明 |

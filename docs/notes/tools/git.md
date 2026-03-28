@@ -1313,7 +1313,9 @@ https://username.github.io/repo-name/    # 项目页面
 
 ### .gitignore 配置
 
-```gitignore
+```bash
+# .gitignore 文件示例
+
 # 忽略特定文件
 *.log
 *.tmp

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反向传播可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            padding: 2%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 2px solid #333;
+            border-radius: 6px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        button:hover {
+            background: #333;
+            color: white;
+        }
+
+        button.primary {
+            background: #333;
+            color: white;
+        }
+
+        button.primary:hover {
+            background: #555;
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            padding: 15px 25px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: white;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .flow-box.active {
+            background: #333;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .flow-box.forward {
+            border-color: #3498db;
+        }
+
+        .flow-box.forward.active {
+            background: #3498db;
+        }
+
+        .flow-box.backward {
+            border-color: #e74c3c;
+        }
+
+        .flow-box.backward.active {
+            background: #e74c3c;
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .flow-arrow.forward {
+            color: #3498db;
+        }
+
+        .flow-arrow.backward {
+            color: #e74c3c;
+        }
+
+        .network-visual {
+            position: relative;
+            padding: 30px 10px;
+            min-height: 250px;
+        }
+
+        .network-svg {
+            width: 100%;
+            height: 250px;
+        }
+
+        .neuron-circle {
+            fill: white;
+            stroke: #333;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+
+        .neuron-circle.active {
+            fill: #333;
+        }
+
+        .neuron-circle.forward-active {
+            fill: #3498db;
+            stroke: #3498db;
+        }
+
+        .neuron-circle.backward-active {
+            fill: #e74c3c;
+            stroke: #e74c3c;
+        }
+
+        .neuron-text {
+            fill: #333;
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .neuron-text.active {
+            fill: white;
+        }
+
+        .connection-line {
+            stroke: #ddd;
+            stroke-width: 1.5;
+            transition: all 0.3s ease;
+        }
+
+        .connection-line.forward-active {
+            stroke: #3498db;
+            stroke-width: 2.5;
+        }
+
+        .connection-line.backward-active {
+            stroke: #e74c3c;
+            stroke-width: 2.5;
+        }
+
+        .gradient-flow {
+            fill: none;
+            stroke: #e74c3c;
+            stroke-width: 3;
+            stroke-dasharray: 8 4;
+            stroke-dashoffset: 0;
+            animation: flowAnimation 1s linear infinite;
+        }
+
+        @keyframes flowAnimation {
+            to {
+                stroke-dashoffset: -12;
+            }
+        }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #333;
+        }
+
+        .info-item.forward {
+            border-left-color: #3498db;
+        }
+
+        .info-item.backward {
+            border-left-color: #e74c3c;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .formula-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            border-left: 3px solid #333;
+        }
+
+        .formula-box.backward {
+            border-left-color: #e74c3c;
+        }
+
+        .step-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .step-tab {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .step-tab:hover {
+            border-color: #333;
+        }
+
+        .step-tab.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .gradient-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .gradient-item {
+            background: #fff5f5;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ffcdd2;
+            text-align: center;
+        }
+
+        .gradient-name {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .gradient-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e74c3c;
+            font-family: 'Courier New', monospace;
+        }
+
+        .chain-rule-visual {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .chain-rule-visual .step {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 5px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .chain-rule-visual .arrow {
+            display: inline-block;
+            margin: 0 5px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .flow-diagram {
+                gap: 10px;
+            }
+
+            .flow-box {
+                padding: 10px 15px;
+                min-width: 100px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>反向传播可视化</h1>
+
+        <div class="card">
+            <h2>传播方向对比</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3498db;"></div>
+                    <span>前向传播（数据流）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>反向传播（梯度流）</span>
+                </div>
+            </div>
+            <div class="flow-diagram">
+                <div class="flow-box forward" id="flowInput">输入 x</div>
+                <div class="flow-arrow forward">→</div>
+                <div class="flow-box forward" id="flowHidden">隐藏层 h</div>
+                <div class="flow-arrow forward">→</div>
+                <div class="flow-box forward" id="flowOutput">输出 y</div>
+                <div class="flow-arrow forward">→</div>
+                <div class="flow-box forward" id="flowLoss">损失 L</div>
+            </div>
+            <div class="flow-diagram">
+                <div class="flow-box backward" id="flowGradInput">∇L/∇x</div>
+                <div class="flow-arrow backward">←</div>
+                <div class="flow-box backward" id="flowGradHidden">∇L/∇h</div>
+                <div class="flow-arrow backward">←</div>
+                <div class="flow-box backward" id="flowGradOutput">∇L/∇y</div>
+                <div class="flow-arrow backward">←</div>
+                <div class="flow-box backward" id="flowGradLoss">∇L/∇L=1</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>网络可视化</h2>
+            <div class="network-visual">
+                <svg class="network-svg" id="networkSvg" viewBox="0 0 600 200">
+                </svg>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>步骤演示</h2>
+            <div class="step-tabs">
+                <div class="step-tab active" onclick="showStep(0)">1. 前向传播</div>
+                <div class="step-tab" onclick="showStep(1)">2. 计算损失</div>
+                <div class="step-tab" onclick="showStep(2)">3. 输出层梯度</div>
+                <div class="step-tab" onclick="showStep(3)">4. 隐藏层梯度</div>
+                <div class="step-tab" onclick="showStep(4)">5. 更新参数</div>
+            </div>
+
+            <div class="button-group">
+                <button class="primary" onclick="playAnimation()">▶ 自动播放</button>
+                <button onclick="showStep(currentStep > 0 ? currentStep - 1 : 0)">上一步</button>
+                <button onclick="showStep(currentStep < 4 ? currentStep + 1 : 4)">下一步</button>
+                <button onclick="resetVisualization()">重置</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>计算详情</h2>
+            <div id="stepContent">
+                <div class="info-panel">
+                    <div class="info-item forward">
+                        <div class="info-label">输入值</div>
+                        <div class="info-value" id="inputVal">[1.0, 0.5]</div>
+                    </div>
+                    <div class="info-item forward">
+                        <div class="info-label">隐藏层输出</div>
+                        <div class="info-value" id="hiddenVal">[0.73, 0.88]</div>
+                    </div>
+                    <div class="info-item forward">
+                        <div class="info-label">预测输出</div>
+                        <div class="info-value" id="predVal">0.82</div>
+                    </div>
+                    <div class="info-item forward">
+                        <div class="info-label">真实标签</div>
+                        <div class="info-value" id="trueVal">1.0</div>
+                    </div>
+                </div>
+
+                <div class="formula-box" id="formulaBox">
+                    <strong>当前步骤：</strong>前向传播<br>
+                    数据从输入层流向输出层
+                </div>
+
+                <div class="gradient-display" id="gradientDisplay">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>链式法则</h2>
+            <div class="chain-rule-visual">
+                <div class="step">∂L/∂W</div>
+                <div class="arrow">=</div>
+                <div class="step">∂L/∂y</div>
+                <div class="arrow">×</div>
+                <div class="step">∂y/∂z</div>
+                <div class="arrow">×</div>
+                <div class="step">∂z/∂W</div>
+            </div>
+            <p style="text-align: center; color: #666; font-size: 13px; margin-top: 10px;">
+                梯度通过链式法则逐层传递，从输出层向输入层反向计算
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let animationInterval = null;
+
+        const network = {
+            input: [1.0, 0.5],
+            W1: [[0.5, -0.3], [0.2, 0.8]],
+            b1: [0.1, 0.2],
+            W2: [[0.6, 0.4]],
+            b2: [0.1],
+            hidden: [],
+            output: 0,
+            target: 1.0,
+            loss: 0,
+            gradients: {}
+        };
+
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-x));
+        }
+
+        function sigmoidDerivative(x) {
+            const s = sigmoid(x);
+            return s * (1 - s);
+        }
+
+        function forwardPass() {
+            const [x1, x2] = network.input;
+            const [[w11, w12], [w21, w22]] = network.W1;
+            const [b1, b2] = network.b1;
+
+            const z1 = w11 * x1 + w12 * x2 + b1;
+            const z2 = w21 * x1 + w22 * x2 + b2;
+
+            network.hidden = [sigmoid(z1), sigmoid(z2)];
+            network.z_hidden = [z1, z2];
+
+            const [[wo1, wo2]] = network.W2;
+            const z_out = wo1 * network.hidden[0] + wo2 * network.hidden[1] + network.b2[0];
+            network.output = sigmoid(z_out);
+            network.z_output = z_out;
+
+            network.loss = -(
+                network.target * Math.log(network.output + 1e-10) +
+                (1 - network.target) * Math.log(1 - network.output + 1e-10)
+            );
+        }
+
+        function backwardPass() {
+            const outputError = network.output - network.target;
+            const dOutput = outputError;
+
+            network.gradients.dW2 = [
+                dOutput * network.hidden[0],
+                dOutput * network.hidden[1]
+            ];
+            network.gradients.db2 = dOutput;
+
+            const [[wo1, wo2]] = network.W2;
+            const dHidden = [
+                dOutput * wo1 * sigmoidDerivative(network.z_hidden[0]),
+                dOutput * wo2 * sigmoidDerivative(network.z_hidden[1])
+            ];
+
+            network.gradients.dW1 = [
+                [dHidden[0] * network.input[0], dHidden[0] * network.input[1]],
+                [dHidden[1] * network.input[0], dHidden[1] * network.input[1]]
+            ];
+            network.gradients.db1 = dHidden;
+        }
+
+        forwardPass();
+        backwardPass();
+
+        function drawNetwork() {
+            const svg = document.getElementById('networkSvg');
+            svg.innerHTML = '';
+
+            const positions = {
+                input: [[100, 60], [100, 140]],
+                hidden: [[280, 50], [280, 100], [280, 150]],
+                output: [[460, 100]]
+            };
+
+            const connections = [
+                [positions.input[0], positions.hidden[0]],
+                [positions.input[0], positions.hidden[1]],
+                [positions.input[0], positions.hidden[2]],
+                [positions.input[1], positions.hidden[0]],
+                [positions.input[1], positions.hidden[1]],
+                [positions.input[1], positions.hidden[2]],
+                [positions.hidden[0], positions.output[0]],
+                [positions.hidden[1], positions.output[0]],
+                [positions.hidden[2], positions.output[0]]
+            ];
+
+            connections.forEach((conn, i) => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', conn[0][0]);
+                line.setAttribute('y1', conn[0][1]);
+                line.setAttribute('x2', conn[1][0]);
+                line.setAttribute('y2', conn[1][1]);
+                line.setAttribute('class', 'connection-line');
+                line.setAttribute('id', `conn${i}`);
+                svg.appendChild(line);
+            });
+
+            const layers = [
+                { pos: positions.input, labels: ['x₁', 'x₂'], values: network.input },
+                { pos: positions.hidden, labels: ['h₁', 'h₂', 'h₃'], values: [...network.hidden, 0] },
+                { pos: positions.output, labels: ['y'], values: [network.output] }
+            ];
+
+            layers.forEach((layer, layerIdx) => {
+                layer.pos.forEach((pos, i) => {
+                    if (layerIdx === 1 && i === 2) return;
+
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pos[0]);
+                    circle.setAttribute('cy', pos[1]);
+                    circle.setAttribute('r', '20');
+                    circle.setAttribute('class', 'neuron-circle');
+                    circle.setAttribute('id', `neuron${layerIdx}${i}`);
+                    svg.appendChild(circle);
+
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', pos[0]);
+                    text.setAttribute('y', pos[1]);
+                    text.setAttribute('class', 'neuron-text');
+                    text.setAttribute('id', `text${layerIdx}${i}`);
+                    text.textContent = layer.labels[i];
+                    svg.appendChild(text);
+                });
+            });
+
+            const layerLabels = [
+                { x: 100, y: 190, text: '输入层' },
+                { x: 280, y: 190, text: '隐藏层' },
+                { x: 460, y: 190, text: '输出层' }
+            ];
+
+            layerLabels.forEach(label => {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', label.x);
+                text.setAttribute('y', label.y);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#666');
+                text.setAttribute('font-size', '12');
+                text.textContent = label.text;
+                svg.appendChild(text);
+            });
+        }
+
+        function showStep(step) {
+            currentStep = step;
+
+            document.querySelectorAll('.step-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === step);
+            });
+
+            document.querySelectorAll('.neuron-circle').forEach(c => {
+                c.classList.remove('active', 'forward-active', 'backward-active');
+            });
+            document.querySelectorAll('.connection-line').forEach(c => {
+                c.classList.remove('forward-active', 'backward-active');
+            });
+            document.querySelectorAll('.neuron-text').forEach(t => {
+                t.classList.remove('active');
+            });
+            document.querySelectorAll('.flow-box').forEach(b => {
+                b.classList.remove('active');
+            });
+
+            const formulaBox = document.getElementById('formulaBox');
+            const gradientDisplay = document.getElementById('gradientDisplay');
+
+            switch(step) {
+                case 0:
+                    document.getElementById('flowInput').classList.add('active');
+                    document.getElementById('flowHidden').classList.add('active');
+                    document.getElementById('flowOutput').classList.add('active');
+
+                    document.querySelectorAll('.neuron-circle').forEach(c => c.classList.add('forward-active'));
+                    document.querySelectorAll('.neuron-text').forEach(t => t.classList.add('active'));
+                    document.querySelectorAll('.connection-line').forEach(c => c.classList.add('forward-active'));
+
+                    formulaBox.innerHTML = `
+                        <strong>步骤 1: 前向传播</strong><br>
+                        隐藏层: h = σ(W₁x + b₁)<br>
+                        &nbsp;&nbsp;h₁ = sigmoid(${(network.W1[0][0]*network.input[0] + network.W1[0][1]*network.input[1] + network.b1[0]).toFixed(3)}) = ${network.hidden[0].toFixed(3)}<br>
+                        &nbsp;&nbsp;h₂ = sigmoid(${(network.W1[1][0]*network.input[0] + network.W1[1][1]*network.input[1] + network.b1[1]).toFixed(3)}) = ${network.hidden[1].toFixed(3)}<br>
+                        输出层: y = σ(W₂h + b₂)<br>
+                        &nbsp;&nbsp;y = sigmoid(${network.z_output.toFixed(3)}) = ${network.output.toFixed(3)}
+                    `;
+                    gradientDisplay.innerHTML = '';
+                    break;
+
+                case 1:
+                    document.getElementById('flowLoss').classList.add('active');
+
+                    formulaBox.innerHTML = `
+                        <strong>步骤 2: 计算损失</strong><br>
+                        使用交叉熵损失函数：<br>
+                        L = -[y_true·log(y_pred) + (1-y_true)·log(1-y_pred)]<br>
+                        L = -[${network.target}·log(${network.output.toFixed(3)}) + ${(1-network.target).toFixed(1)}·log(${(1-network.output).toFixed(3)})]<br>
+                        <strong>L = ${network.loss.toFixed(4)}</strong>
+                    `;
+                    gradientDisplay.innerHTML = `
+                        <div class="gradient-item">
+                            <div class="gradient-name">损失值</div>
+                            <div class="gradient-value">${network.loss.toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">预测值</div>
+                            <div class="gradient-value">${network.output.toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">真实值</div>
+                            <div class="gradient-value">${network.target.toFixed(1)}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 2:
+                    document.getElementById('flowGradLoss').classList.add('active');
+                    document.getElementById('flowGradOutput').classList.add('active');
+
+                    document.getElementById('neuron20').classList.add('backward-active');
+                    document.getElementById('text20').classList.add('active');
+
+                    for (let i = 6; i < 9; i++) {
+                        document.getElementById(`conn${i}`).classList.add('backward-active');
+                    }
+
+                    formulaBox.className = 'formula-box backward';
+                    formulaBox.innerHTML = `
+                        <strong>步骤 3: 输出层梯度</strong><br>
+                        ∂L/∂y = y_pred - y_true = ${network.output.toFixed(3)} - ${network.target} = <strong>${(network.output - network.target).toFixed(4)}</strong><br><br>
+                        ∂L/∂W₂ = ∂L/∂y × h<br>
+                        &nbsp;&nbsp;∂L/∂w₁ = ${(network.output - network.target).toFixed(4)} × ${network.hidden[0].toFixed(3)} = <strong>${network.gradients.dW2[0].toFixed(4)}</strong><br>
+                        &nbsp;&nbsp;∂L/∂w₂ = ${(network.output - network.target).toFixed(4)} × ${network.hidden[1].toFixed(3)} = <strong>${network.gradients.dW2[1].toFixed(4)}</strong>
+                    `;
+                    gradientDisplay.innerHTML = `
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂y</div>
+                            <div class="gradient-value">${(network.output - network.target).toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂W₂[0]</div>
+                            <div class="gradient-value">${network.gradients.dW2[0].toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂W₂[1]</div>
+                            <div class="gradient-value">${network.gradients.dW2[1].toFixed(4)}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 3:
+                    document.getElementById('flowGradHidden').classList.add('active');
+
+                    document.getElementById('neuron10').classList.add('backward-active');
+                    document.getElementById('neuron11').classList.add('backward-active');
+                    document.getElementById('text10').classList.add('active');
+                    document.getElementById('text11').classList.add('active');
+
+                    for (let i = 0; i < 6; i++) {
+                        document.getElementById(`conn${i}`).classList.add('backward-active');
+                    }
+
+                    formulaBox.innerHTML = `
+                        <strong>步骤 4: 隐藏层梯度</strong><br>
+                        通过链式法则传递梯度：<br>
+                        ∂L/∂h = ∂L/∂y × W₂ × σ'(z)<br><br>
+                        ∂L/∂h₁ = ${(network.output - network.target).toFixed(4)} × ${network.W2[0][0]} × ${sigmoidDerivative(network.z_hidden[0]).toFixed(4)} = <strong>${network.gradients.db1[0].toFixed(4)}</strong><br>
+                        ∂L/∂h₂ = ${(network.output - network.target).toFixed(4)} × ${network.W2[0][1]} × ${sigmoidDerivative(network.z_hidden[1]).toFixed(4)} = <strong>${network.gradients.db1[1].toFixed(4)}</strong>
+                    `;
+                    gradientDisplay.innerHTML = `
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂h₁</div>
+                            <div class="gradient-value">${network.gradients.db1[0].toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂h₂</div>
+                            <div class="gradient-value">${network.gradients.db1[1].toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂W₁[0,0]</div>
+                            <div class="gradient-value">${network.gradients.dW1[0][0].toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">∂L/∂W₁[1,0]</div>
+                            <div class="gradient-value">${network.gradients.dW1[1][0].toFixed(4)}</div>
+                        </div>
+                    `;
+                    break;
+
+                case 4:
+                    document.getElementById('flowGradInput').classList.add('active');
+
+                    document.getElementById('neuron00').classList.add('backward-active');
+                    document.getElementById('neuron01').classList.add('backward-active');
+                    document.getElementById('text00').classList.add('active');
+                    document.getElementById('text01').classList.add('active');
+
+                    formulaBox.innerHTML = `
+                        <strong>步骤 5: 更新参数</strong><br>
+                        使用梯度下降更新权重（学习率 η = 0.1）：<br><br>
+                        W_new = W_old - η × ∂L/∂W<br><br>
+                        W₂ 更新：<br>
+                        &nbsp;&nbsp;w₁ = ${network.W2[0][0]} - 0.1 × ${network.gradients.dW2[0].toFixed(4)} = ${(network.W2[0][0] - 0.1 * network.gradients.dW2[0]).toFixed(4)}<br>
+                        &nbsp;&nbsp;w₂ = ${network.W2[0][1]} - 0.1 × ${network.gradients.dW2[1].toFixed(4)} = ${(network.W2[0][1] - 0.1 * network.gradients.dW2[1]).toFixed(4)}
+                    `;
+                    gradientDisplay.innerHTML = `
+                        <div class="gradient-item">
+                            <div class="gradient-name">学习率</div>
+                            <div class="gradient-value">0.1</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">W₂[0] 更新量</div>
+                            <div class="gradient-value">${(-0.1 * network.gradients.dW2[0]).toFixed(4)}</div>
+                        </div>
+                        <div class="gradient-item">
+                            <div class="gradient-name">W₂[1] 更新量</div>
+                            <div class="gradient-value">${(-0.1 * network.gradients.dW2[1]).toFixed(4)}</div>
+                        </div>
+                    `;
+                    break;
+            }
+        }
+
+        function playAnimation() {
+            resetVisualization();
+
+            let step = 0;
+            showStep(step);
+            step++;
+
+            animationInterval = setInterval(() => {
+                if (step <= 4) {
+                    showStep(step);
+                    step++;
+                } else {
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+            }, 2000);
+        }
+
+        function resetVisualization() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            showStep(0);
+        }
+
+        window.addEventListener('load', () => {
+            drawNetwork();
+            showStep(0);
+
+            // 自动开始播放
+            setTimeout(playAnimation, 500);
+
+            // 循环播放
+            setInterval(() => {
+                currentStep = 0;
+                playAnimation();
+            }, 8000);
+        });
+
+        window.addEventListener('resize', drawNetwork);
+    </script>
+</body>
+</html>

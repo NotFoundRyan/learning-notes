@@ -59,7 +59,7 @@ prerequisites:
 验证损失：先降后升 ✗  ← 过拟合信号
 ```
 
-<CollapsibleIframe src="/learning-notes/demos/overfitting.html" title="过拟合可视化" :height="350" />
+<CollapsibleIframe src="/learning-notes/demos/regularization/overfitting.html" title="过拟合可视化" :height="350" />
 
 ### 1.3 为什么会过拟合？
 

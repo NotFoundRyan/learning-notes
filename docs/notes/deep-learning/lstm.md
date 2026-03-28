@@ -36,6 +36,8 @@ prerequisites:
 
 ***
 
+<CollapsibleIframe src="/learning-notes/demos/lstm/lstm.html" title="LSTM 门控机制可视化" :height="400" />
+
 ## 一、为什么需要 LSTM？
 
 ### RNN 的问题

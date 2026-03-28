@@ -81,7 +81,7 @@ a = activation(z)     # 激活函数
 
 ### 前向传播可视化
 
-<CollapsibleIframe src="/learning-notes/demos/forward-propagation.html" title="前向传播可视化" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/forward-backward/forward-propagation.html" title="前向传播可视化" :height="500" />
 
 ***
 
@@ -153,7 +153,7 @@ delta_prev = (W.T @ delta) * activation_derivative(z)
 
 ### 反向传播可视化
 
-<CollapsibleIframe src="/learning-notes/demos/backpropagation.html" title="反向传播可视化" :height="500" />
+<CollapsibleIframe src="/learning-notes/demos/forward-backward/backpropagation.html" title="反向传播可视化" :height="500" />
 
 ***
 

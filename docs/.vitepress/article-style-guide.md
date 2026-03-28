@@ -457,18 +457,60 @@ $$
 - 使用相对单位（rem、%、vw）而非固定 px
 - 按钮和交互元素最小点击区域：44×44px
 
-### 6.5 性能要求
+### 6.5 容器自适应要求
+
+HTML 演示必须能够完全填充 iframe 容器并自适应调整大小：
+
+**核心布局要求：**
+
+```css
+/* 必须设置 */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+```
+
+**字体自适应：**
+
+```css
+/* 使用 clamp() 实现响应式字体 */
+h1 { font-size: clamp(14px, 2vw, 24px); }
+p { font-size: clamp(10px, 1.2vw, 13px); }
+```
+
+**布局要点：**
+
+| 要点 | 说明 |
+|------|------|
+| 全屏填充 | `html, body, .container` 都设置 `width: 100%; height: 100%` |
+| 禁止滚动 | `overflow: hidden` 避免出现滚动条 |
+| 弹性布局 | 使用 `flex: 1` 让内容区域自动填充剩余空间 |
+| 相对单位 | 字体、间距使用 `clamp()` 或百分比 |
+| Canvas 自适应 | Canvas 元素设置 `width: 100%; height: 100%` |
+
+### 6.6 性能要求
 
 - 避免引入外部 CDN 依赖（离线可用）
 - 动画使用 `requestAnimationFrame`，不用 `setInterval`
 - 元素数量超过 100 时考虑 Canvas 替代 DOM
 
-### 6.6 无障碍要求
+### 6.7 无障碍要求
 
 - 按钮有明确文字标签（不要只有图标）
 - 颜色不作为唯一信息区分手段（配合形状/文字）
 
-### 6.7 颜色方案
+### 6.8 颜色方案
 
 ```css
 /* 主色调 */
