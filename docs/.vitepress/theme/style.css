@@ -133,6 +133,40 @@ html.dark {
   max-width: 100% !important;
 }
 
+.question-page-wide .VPDoc .content-container {
+  max-width: 100% !important;
+  padding: 32px 24px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.question-page-wide .VPDoc {
+  padding-top: 76px !important;
+}
+
+.question-page-wide .VPContent {
+  padding: 0 !important;
+}
+
+.question-page-wide .container {
+  max-width: 100% !important;
+}
+
+.question-page-wide .aside {
+  display: none !important;
+}
+
+.question-page-wide .VPDoc .content {
+  max-width: 100% !important;
+  flex: 1 !important;
+}
+
+.question-page-wide .aside-container {
+  display: none !important;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
