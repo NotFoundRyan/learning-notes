@@ -463,3 +463,50 @@ a {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+.bubble-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: var(--vp-c-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 50px;
+  box-shadow: var(--glass-shadow);
+  text-decoration: none !important;
+  color: var(--vp-c-text-1) !important;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.bubble-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.15);
+}
+
+.dark .bubble-link:hover {
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+}
+
+.bubble-link-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.bubble-link-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.bubble-link-desc {
+  font-size: 11px;
+  color: var(--vp-c-text-3);
+  font-weight: 400;
+}

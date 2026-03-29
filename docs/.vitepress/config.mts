@@ -26,6 +26,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: '首页', link: '/' },
       { text: '笔记', link: '/notes/' },
+      { text: '题库', link: '/questions/' },
       { text: '歌单', link: '/music/' }
     ],
 
